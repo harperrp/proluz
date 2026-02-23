@@ -2,62 +2,78 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Building2, 
-  Search, 
-  Plus, 
-  MapPin,
-  Users,
-  Lightbulb,
-  MoreHorizontal
-} from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { CityHall } from '@/types';
+import { Label } from '@/components/ui/label';
+import { Building2, Search, Plus, MapPin, Users, Lightbulb, MoreHorizontal } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MOCK_CITY_HALLS_LIST, CityHallWithStats } from '@/data/mockData';
+import { BRAZILIAN_STATES } from '@/types';
+import { toast } from 'sonner';
 
-interface CityHallWithStats extends CityHall {
-  usersCount: number;
-  polesCount: number;
-}
-
-const MOCK_CITY_HALLS: CityHallWithStats[] = [
-  { id: '1', name: 'Prefeitura de São Paulo', city: 'São Paulo', state: 'SP', createdAt: new Date('2023-01-10'), usersCount: 15, polesCount: 1250 },
-  { id: '2', name: 'Prefeitura de Campinas', city: 'Campinas', state: 'SP', createdAt: new Date('2023-03-15'), usersCount: 8, polesCount: 450 },
-  { id: '3', name: 'Prefeitura de Santos', city: 'Santos', state: 'SP', createdAt: new Date('2023-05-20'), usersCount: 6, polesCount: 320 },
-  { id: '4', name: 'Prefeitura de Sorocaba', city: 'Sorocaba', state: 'SP', createdAt: new Date('2023-07-12'), usersCount: 5, polesCount: 280 },
-];
+const formatDate = (date: Date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 
 export default function DashboardCityHalls() {
+  const [cityHalls, setCityHalls] = useState<CityHallWithStats[]>(MOCK_CITY_HALLS_LIST);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredCityHalls = MOCK_CITY_HALLS.filter(ch => 
+  // Create modal
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [newState, setNewState] = useState('');
+  const [newCnpj, setNewCnpj] = useState('');
+
+  // Edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editCH, setEditCH] = useState<CityHallWithStats | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editCnpj, setEditCnpj] = useState('');
+
+  const filteredCityHalls = cityHalls.filter(ch =>
     ch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ch.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
+  const totalUsers = cityHalls.reduce((acc, ch) => acc + ch.usersCount, 0);
+  const totalPoles = cityHalls.reduce((acc, ch) => acc + ch.polesCount, 0);
+
+  const formatCnpj = (value: string) => {
+    const nums = value.replace(/\D/g, '');
+    return nums.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');
   };
 
-  const totalUsers = MOCK_CITY_HALLS.reduce((acc, ch) => acc + ch.usersCount, 0);
-  const totalPoles = MOCK_CITY_HALLS.reduce((acc, ch) => acc + ch.polesCount, 0);
+  const handleCreate = () => {
+    if (!newName || !newCity || !newState) { toast.error('Preencha todos os campos obrigatórios.'); return; }
+    const id = String(cityHalls.length + 1);
+    setCityHalls(prev => [...prev, { id, name: newName, city: newCity, state: newState, cnpj: newCnpj, status: 'ATIVO', createdAt: new Date(), usersCount: 0, polesCount: 0 }]);
+    toast.success('Prefeitura cadastrada!', { description: `${newCity}/${newState}` });
+    setCreateOpen(false);
+    setNewName(''); setNewCity(''); setNewState(''); setNewCnpj('');
+  };
+
+  const openEdit = (ch: CityHallWithStats) => {
+    setEditCH(ch); setEditName(ch.name); setEditCity(ch.city); setEditState(ch.state); setEditCnpj(ch.cnpj || '');
+    setEditOpen(true);
+  };
+
+  const handleEdit = () => {
+    if (!editCH) return;
+    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj } : ch));
+    toast.success('Prefeitura atualizada!');
+    setEditOpen(false);
+  };
+
+  const toggleStatus = (ch: CityHallWithStats) => {
+    const newStatus = ch.status === 'ATIVO' ? 'INATIVO' : 'ATIVO';
+    setCityHalls(prev => prev.map(c => c.id === ch.id ? { ...c, status: newStatus } : c));
+    toast.success(`Prefeitura ${newStatus === 'ATIVO' ? 'ativada' : 'desativada'}.`);
+  };
 
   return (
     <DashboardLayout>
@@ -65,12 +81,9 @@ export default function DashboardCityHalls() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Prefeituras</h1>
-            <p className="text-muted-foreground">
-              Gerencie os municípios cadastrados no sistema
-            </p>
+            <p className="text-muted-foreground">Gerencie os municípios cadastrados no sistema</p>
           </div>
-
-          <Button>
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Prefeitura
           </Button>
@@ -83,7 +96,7 @@ export default function DashboardCityHalls() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Prefeituras</p>
-                  <p className="text-2xl font-bold">{MOCK_CITY_HALLS.length}</p>
+                  <p className="text-2xl font-bold">{cityHalls.length}</p>
                 </div>
                 <Building2 className="h-8 w-8 text-primary" />
               </div>
@@ -118,26 +131,16 @@ export default function DashboardCityHalls() {
           <CardContent className="pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou cidade..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 max-w-md"
-              />
+              <Input placeholder="Buscar por nome ou cidade..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 max-w-md" />
             </div>
           </CardContent>
         </Card>
 
-        {/* City Halls Table */}
+        {/* Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Lista de Prefeituras
-            </CardTitle>
-            <CardDescription>
-              {filteredCityHalls.length} prefeituras cadastradas
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Lista de Prefeituras</CardTitle>
+            <CardDescription>{filteredCityHalls.length} prefeituras cadastradas</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -146,6 +149,8 @@ export default function DashboardCityHalls() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Cidade/Estado</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Usuários</TableHead>
                     <TableHead>Postes</TableHead>
                     <TableHead>Cadastrado em</TableHead>
@@ -162,32 +167,28 @@ export default function DashboardCityHalls() {
                           {ch.city}/{ch.state}
                         </div>
                       </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{ch.cnpj || '—'}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          {ch.usersCount}
-                        </div>
+                        <Badge className={ch.status === 'ATIVO' ? 'status-badge-working' : 'bg-muted text-muted-foreground'}>
+                          {ch.status}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Lightbulb className="h-4 w-4 text-muted-foreground" />
-                          {ch.polesCount}
-                        </div>
+                        <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" />{ch.usersCount}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-muted-foreground" />{ch.polesCount}</div>
                       </TableCell>
                       <TableCell>{formatDate(ch.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Editar</DropdownMenuItem>
-                            <DropdownMenuItem>Ver Usuários</DropdownMenuItem>
-                            <DropdownMenuItem>Ver Postes</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              Desativar
+                            <DropdownMenuItem onClick={() => openEdit(ch)}>Editar</DropdownMenuItem>
+                            <DropdownMenuItem className={ch.status === 'ATIVO' ? 'text-destructive' : 'text-success'} onClick={() => toggleStatus(ch)}>
+                              {ch.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -200,6 +201,68 @@ export default function DashboardCityHalls() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Create Modal */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Prefeitura</DialogTitle>
+            <DialogDescription>Cadastre um novo município no sistema</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Nome da Prefeitura *</Label><Input placeholder="Prefeitura de..." value={newName} onChange={e => setNewName(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label>Cidade *</Label><Input placeholder="Nome da cidade" value={newCity} onChange={e => setNewCity(e.target.value)} /></div>
+              <div className="space-y-2">
+                <Label>Estado *</Label>
+                <Select value={newState} onValueChange={setNewState}>
+                  <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                  <SelectContent>{BRAZILIAN_STATES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>CNPJ</Label>
+              <Input placeholder="00.000.000/0001-00" value={newCnpj} maxLength={18} onChange={e => setNewCnpj(formatCnpj(e.target.value))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreate}>Cadastrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Prefeitura</DialogTitle>
+            <DialogDescription>Atualize os dados da prefeitura</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Nome *</Label><Input value={editName} onChange={e => setEditName(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label>Cidade *</Label><Input value={editCity} onChange={e => setEditCity(e.target.value)} /></div>
+              <div className="space-y-2">
+                <Label>Estado *</Label>
+                <Select value={editState} onValueChange={setEditState}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{BRAZILIAN_STATES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>CNPJ</Label>
+              <Input value={editCnpj} maxLength={18} onChange={e => setEditCnpj(formatCnpj(e.target.value))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEdit}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
