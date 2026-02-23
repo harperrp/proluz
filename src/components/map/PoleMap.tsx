@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
-import { AlertTriangle, CheckCircle2, Lightbulb } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, Lightbulb } from 'lucide-react';
 import { Pole, PoleStatus } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { getPoleStats, getRecurrenceLevel, formatDateBR, daysSince } from '@/data/mockData';
+import { PoleHistoryDrawer } from '@/components/poles/PoleHistoryDrawer';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -75,7 +77,14 @@ export function PoleMap({
   const [internalPoles, setInternalPoles] = useState<Pole[]>(poles ?? MOCK_POLES);
   const [filter, setFilter] = useState<PoleStatus | 'TODOS'>(defaultFilter);
   const [selectedPole, setSelectedPole] = useState<Pole | null>(null);
+  const [historyPole, setHistoryPole] = useState<Pole | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+
+  const openHistory = (pole: Pole) => {
+    setHistoryPole(pole);
+    setHistoryOpen(true);
+  };
 
   useEffect(() => {
     if (poles) {
@@ -221,7 +230,36 @@ export function PoleMap({
                         Histórico: {insight.failuresTotal} queimas totais • {insight.failuresLast30Days} em 30 dias
                       </p>
                     )}
-                    {renderStatusActions(pole)}
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openHistory(pole); }}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--warning))] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--warning-foreground))] shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                        title="Visualizar histórico completo"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Histórico
+                      </button>
+                      {editableStatus && (
+                        <>
+                          <button
+                            onClick={() => updatePoleStatus(pole.id, 'FUNCIONANDO')}
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                              pole.status === 'QUEIMADO' ? 'bg-green-600 text-white' : 'border bg-transparent text-gray-600'
+                            }`}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Consertado
+                          </button>
+                          <button
+                            onClick={() => updatePoleStatus(pole.id, 'QUEIMADO')}
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                              pole.status !== 'QUEIMADO' ? 'bg-red-600 text-white' : 'border bg-transparent text-gray-600'
+                            }`}
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5" /> Queimado
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Popup>
               </Marker>
@@ -266,7 +304,21 @@ export function PoleMap({
                 </p>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:bg-[hsl(var(--warning))]/90 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                      onClick={() => openHistory(selectedPole)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Visualizar histórico completo</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {renderStatusActions(selectedPole)}
               <Button variant="outline" size="sm" onClick={() => setSelectedPole(null)}>
                 Fechar
@@ -275,6 +327,8 @@ export function PoleMap({
           </div>
         </div>
       )}
+
+      <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
     </div>
   );
 }
