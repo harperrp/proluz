@@ -1,89 +1,144 @@
+import { useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  FileText,
-  Download,
-  Calendar,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  FileSpreadsheet,
-  AlertTriangle,
-  Route,
-  Lightbulb,
-  MapPin,
-  Clock,
+  FileText, Download, Calendar, BarChart3, AlertTriangle,
+  Lightbulb, MapPin, Clock, FileSpreadsheet, TrendingUp, Search, ChevronLeft, ChevronRight,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useMemo, useState } from 'react';
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
+} from 'recharts';
 import { toast } from 'sonner';
+import { MOCK_POLES, MOCK_POLE_HISTORY, getPoleStats, getRecurrenceLevel, formatDateBR } from '@/data/mockData';
 
-interface ReportType {
-  id: string;
-  name: string;
-  description: string;
-  icon: typeof FileText;
-}
+// ========================
+// Generate report data from mock data
+// ========================
+const buildOccurrencesByMonth = () => {
+  const months: Record<string, { queimados: number; consertados: number }> = {};
+  MOCK_POLE_HISTORY.forEach(h => {
+    const key = `${h.dateQueimado.getFullYear()}-${String(h.dateQueimado.getMonth() + 1).padStart(2, '0')}`;
+    if (!months[key]) months[key] = { queimados: 0, consertados: 0 };
+    months[key].queimados++;
+    if (h.dateConsertado) months[key].consertados++;
+  });
+  return Object.entries(months)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, val]) => {
+      const [y, m] = key.split('-');
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      return { name: `${monthNames[parseInt(m) - 1]}/${y.slice(2)}`, ...val };
+    });
+};
 
-interface FailureRecord {
-  poleId: string;
-  address: string;
-  neighborhood: string;
-  failuresTotal: number;
-  failuresLast30Days: number;
-  avgRepairHours: number;
-}
+const buildNeighborhoodStats = () => {
+  const stats: Record<string, { total: number; avgDays: number; count: number }> = {};
+  MOCK_POLE_HISTORY.forEach(h => {
+    const pole = MOCK_POLES.find(p => p.id === h.poleId);
+    const neighborhood = pole?.neighborhood || 'Desconhecido';
+    if (!stats[neighborhood]) stats[neighborhood] = { total: 0, avgDays: 0, count: 0 };
+    stats[neighborhood].total++;
+    if (h.tempoResolucaoDias !== null) {
+      stats[neighborhood].avgDays += h.tempoResolucaoDias;
+      stats[neighborhood].count++;
+    }
+  });
+  return Object.entries(stats).map(([name, val]) => ({
+    name,
+    ocorrencias: val.total,
+    tempoMedio: val.count > 0 ? Math.round(val.avgDays / val.count * 10) / 10 : 0,
+  })).sort((a, b) => b.ocorrencias - a.ocorrencias);
+};
 
-const reportTypes: ReportType[] = [
-  { id: 'poles-status', name: 'Status dos Postes por Bairro', description: 'Visão geográfica do parque de iluminação por status e criticidade.', icon: BarChart3 },
-  { id: 'complaints-flow', name: 'Fluxo de Denúncias', description: 'Entrada, aprovação, rejeição e SLA por etapa.', icon: FileText },
-  { id: 'maintenance-productivity', name: 'Produtividade de Manutenção', description: 'Atendimentos por equipe/técnico, tempo médio e backlog.', icon: TrendingUp },
-  { id: 'recurrence-alerts', name: 'Recorrência de Queima', description: 'Postes que queimam frequentemente com alertas automáticos.', icon: AlertTriangle },
-  { id: 'route-efficiency', name: 'Eficiência de Rota', description: 'Distância total, tempo de deslocamento e otimização por turno.', icon: Route },
-  { id: 'asset-health', name: 'Saúde dos Ativos', description: 'Postes com maior incidência histórica e sugestão de troca preventiva.', icon: Lightbulb },
-  { id: 'transparency-panel', name: 'Painel de Transparência', description: 'Indicadores para prestação de contas pública para prefeitura.', icon: PieChart },
-  { id: 'geo-hotspots', name: 'Hotspots no Mapa', description: 'Mapa de calor por bairros com maior volume de falhas.', icon: MapPin },
+const buildTopRecurrent = () => {
+  const poleCounts: Record<string, number> = {};
+  MOCK_POLE_HISTORY.forEach(h => {
+    poleCounts[h.poleId] = (poleCounts[h.poleId] || 0) + 1;
+  });
+  return Object.entries(poleCounts)
+    .map(([poleId, count]) => {
+      const pole = MOCK_POLES.find(p => p.id === poleId);
+      return { poleId, count, address: pole?.address || '', neighborhood: pole?.neighborhood || '' };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+};
+
+const statusPieData = [
+  { name: 'Funcionando', value: MOCK_POLES.filter(p => p.status === 'FUNCIONANDO').length, color: 'hsl(142, 72%, 35%)' },
+  { name: 'Queimados', value: MOCK_POLES.filter(p => p.status === 'QUEIMADO').length, color: 'hsl(0, 72%, 51%)' },
 ];
 
-const failureRecords: FailureRecord[] = [
-  { poleId: 'P-001', address: 'Av. Principal, 200', neighborhood: 'Centro', failuresTotal: 5, failuresLast30Days: 2, avgRepairHours: 11 },
-  { poleId: 'P-004', address: 'Rua Nova, 75', neighborhood: 'Vila Nova', failuresTotal: 3, failuresLast30Days: 1, avgRepairHours: 18 },
-  { poleId: 'P-007', address: 'Rua das Árvores, 120', neighborhood: 'Jardim', failuresTotal: 6, failuresLast30Days: 3, avgRepairHours: 14 },
-  { poleId: 'P-011', address: 'Rua das Flores, 330', neighborhood: 'Centro', failuresTotal: 2, failuresLast30Days: 2, avgRepairHours: 20 },
-  { poleId: 'P-023', address: 'Av. Brasil, 850', neighborhood: 'Industrial', failuresTotal: 1, failuresLast30Days: 0, avgRepairHours: 16 },
-];
+const PAGE_SIZE = 5;
 
 export default function DashboardReports() {
-  const [period, setPeriod] = useState('month');
+  // Filters
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
+  const [filterNeighborhood, setFilterNeighborhood] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterTecnico, setFilterTecnico] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
 
-  const criticalRecurrence = useMemo(
-    () => failureRecords.filter((record) => record.failuresTotal >= 5 || record.failuresLast30Days >= 2),
-    [],
-  );
+  const neighborhoods = [...new Set(MOCK_POLES.map(p => p.neighborhood).filter(Boolean))];
+  const tecnicos = [...new Set(MOCK_POLE_HISTORY.map(h => h.tecnicoName).filter(Boolean))];
 
-  const hotNeighborhoods = useMemo(() => {
-    const summary = failureRecords.reduce<Record<string, number>>((acc, curr) => {
-      acc[curr.neighborhood] = (acc[curr.neighborhood] || 0) + curr.failuresLast30Days;
-      return acc;
-    }, {});
+  // Filtered history
+  const filteredHistory = useMemo(() => {
+    return MOCK_POLE_HISTORY.filter(h => {
+      const pole = MOCK_POLES.find(p => p.id === h.poleId);
+      if (dateStart && h.dateQueimado < new Date(dateStart)) return false;
+      if (dateEnd && h.dateQueimado > new Date(dateEnd + 'T23:59:59')) return false;
+      if (filterNeighborhood !== 'all' && pole?.neighborhood !== filterNeighborhood) return false;
+      if (filterStatus === 'queimado' && h.dateConsertado !== null) return false;
+      if (filterStatus === 'consertado' && h.dateConsertado === null) return false;
+      if (filterTecnico !== 'all' && h.tecnicoName !== filterTecnico) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        if (!h.poleId.toLowerCase().includes(term) && !pole?.address?.toLowerCase().includes(term)) return false;
+      }
+      return true;
+    }).sort((a, b) => b.dateQueimado.getTime() - a.dateQueimado.getTime());
+  }, [dateStart, dateEnd, filterNeighborhood, filterStatus, filterTecnico, searchTerm]);
 
-    return Object.entries(summary)
-      .map(([neighborhood, occurrences]) => ({ neighborhood, occurrences }))
-      .sort((a, b) => b.occurrences - a.occurrences);
-  }, []);
+  // Summary
+  const totalOcorrencias = filteredHistory.length;
+  const totalQueimados = filteredHistory.filter(h => h.dateConsertado === null).length;
+  const totalConsertados = filteredHistory.filter(h => h.dateConsertado !== null).length;
+  const resolved = filteredHistory.filter(h => h.tempoResolucaoDias !== null);
+  const tempoMedio = resolved.length > 0 ? (resolved.reduce((a, h) => a + (h.tempoResolucaoDias || 0), 0) / resolved.length).toFixed(1) : '—';
 
-  const handleExport = (reportId: string, format: 'pdf' | 'excel') => {
-    toast.success('Relatório exportado!', {
-      description: `Relatório "${reportId}" gerado em ${format.toUpperCase()}.`,
-    });
+  // Most recurrent pole
+  const poleCounts: Record<string, number> = {};
+  filteredHistory.forEach(h => { poleCounts[h.poleId] = (poleCounts[h.poleId] || 0) + 1; });
+  const topPole = Object.entries(poleCounts).sort((a, b) => b[1] - a[1])[0];
+
+  // Most incident neighborhood
+  const neighCounts: Record<string, number> = {};
+  filteredHistory.forEach(h => {
+    const pole = MOCK_POLES.find(p => p.id === h.poleId);
+    const n = pole?.neighborhood || 'Desconhecido';
+    neighCounts[n] = (neighCounts[n] || 0) + 1;
+  });
+  const topNeigh = Object.entries(neighCounts).sort((a, b) => b[1] - a[1])[0];
+
+  // Pagination
+  const totalPages = Math.ceil(filteredHistory.length / PAGE_SIZE);
+  const pagedHistory = filteredHistory.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const monthlyData = buildOccurrencesByMonth();
+  const neighborhoodData = buildNeighborhoodStats();
+  const topRecurrent = buildTopRecurrent();
+
+  const handleExport = (format: string) => {
+    toast.success(`Exportação ${format.toUpperCase()} iniciada!`, { description: `${filteredHistory.length} registros com filtros aplicados.` });
   };
 
   return (
@@ -92,161 +147,282 @@ export default function DashboardReports() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Relatórios</h1>
-            <p className="text-muted-foreground">Máxima transparência para prefeitura com indicadores operacionais e estratégicos.</p>
+            <p className="text-muted-foreground">Indicadores operacionais e estratégicos com filtros dinâmicos.</p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Última semana</SelectItem>
-                <SelectItem value="month">Último mês</SelectItem>
-                <SelectItem value="quarter">Último trimestre</SelectItem>
-                <SelectItem value="year">Último ano</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
+              <Download className="h-4 w-4 mr-1" />CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('xlsx')}>
+              <FileSpreadsheet className="h-4 w-4 mr-1" />XLSX
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
+              <FileText className="h-4 w-4 mr-1" />PDF
+            </Button>
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {reportTypes.map((report) => {
-            const Icon = report.icon;
-            return (
-              <Card key={report.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{report.name}</CardTitle>
-                        <CardDescription>{report.description}</CardDescription>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1" onClick={() => handleExport(report.id, 'pdf')}>
-                      <Download className="h-4 w-4 mr-2" />
-                      PDF
-                    </Button>
-                    <Button variant="outline" className="flex-1" onClick={() => handleExport(report.id, 'excel')}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Excel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Filters */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+              <div className="space-y-1">
+                <Label className="text-xs">Data Inicial</Label>
+                <Input type="date" value={dateStart} onChange={e => { setDateStart(e.target.value); setPage(0); }} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data Final</Label>
+                <Input type="date" value={dateEnd} onChange={e => { setDateEnd(e.target.value); setPage(0); }} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Bairro</Label>
+                <Select value={filterNeighborhood} onValueChange={v => { setFilterNeighborhood(v); setPage(0); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {neighborhoods.map(n => <SelectItem key={n} value={n!}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Status</Label>
+                <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPage(0); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="queimado">Em aberto</SelectItem>
+                    <SelectItem value="consertado">Resolvido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Técnico</Label>
+                <Select value={filterTecnico} onValueChange={v => { setFilterTecnico(v); setPage(0); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {tecnicos.map(t => <SelectItem key={t!} value={t!}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Busca</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input placeholder="Poste ou rua..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(0); }} className="pl-7 h-9" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Summary cards */}
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold">{totalOcorrencias}</p><p className="text-xs text-muted-foreground">Ocorrências</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-destructive">{totalQueimados}</p><p className="text-xs text-muted-foreground">Em aberto</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-success">{totalConsertados}</p><p className="text-xs text-muted-foreground">Resolvidos</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold">{tempoMedio}</p><p className="text-xs text-muted-foreground">Tempo médio (dias)</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-primary">{topPole ? topPole[0] : '—'}</p><p className="text-xs text-muted-foreground">Mais recorrente ({topPole ? topPole[1] : 0}x)</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-warning">{topNeigh ? topNeigh[0] : '—'}</p><p className="text-xs text-muted-foreground">Bairro líder ({topNeigh ? topNeigh[1] : 0})</p></CardContent></Card>
         </div>
 
+        {/* Charts row 1 */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Ocorrências por Mês</CardTitle>
+              <CardDescription>Queimados vs Consertados ao longo do tempo</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                    <Bar dataKey="queimados" name="Queimados" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="consertados" name="Consertados" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Status Atual dos Postes</CardTitle>
+              <CardDescription>Distribuição do parque de iluminação</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {statusPieData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts row 2 */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tempo Médio por Bairro (dias)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={neighborhoodData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" className="text-xs" />
+                    <YAxis dataKey="name" type="category" className="text-xs" width={120} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                    <Bar dataKey="tempoMedio" name="Tempo médio" fill="hsl(var(--chart-3))" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Top 10 Postes Recorrentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topRecurrent}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="poleId" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                    <Bar dataKey="count" name="Ocorrências" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Dynamic table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Tabela de Ocorrências</CardTitle>
+            <CardDescription>{filteredHistory.length} registros — Página {page + 1} de {totalPages || 1}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Poste</TableHead>
+                    <TableHead>Endereço</TableHead>
+                    <TableHead>Bairro</TableHead>
+                    <TableHead>Queimado em</TableHead>
+                    <TableHead>Consertado em</TableHead>
+                    <TableHead>Resolução</TableHead>
+                    <TableHead>Técnico</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pagedHistory.map(h => {
+                    const pole = MOCK_POLES.find(p => p.id === h.poleId);
+                    return (
+                      <TableRow key={h.id}>
+                        <TableCell className="font-medium">{h.poleId}</TableCell>
+                        <TableCell>{pole?.address || '—'}</TableCell>
+                        <TableCell>{pole?.neighborhood || '—'}</TableCell>
+                        <TableCell>{formatDateBR(h.dateQueimado)}</TableCell>
+                        <TableCell>{h.dateConsertado ? formatDateBR(h.dateConsertado) : '—'}</TableCell>
+                        <TableCell>{h.tempoResolucaoDias !== null ? `${h.tempoResolucaoDias} dias` : '—'}</TableCell>
+                        <TableCell>{h.tecnicoName || '—'}</TableCell>
+                        <TableCell>
+                          <Badge className={h.dateConsertado ? 'status-badge-working' : 'status-badge-broken'}>
+                            {h.dateConsertado ? 'Resolvido' : 'Em aberto'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {pagedHistory.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Nenhum registro encontrado com os filtros aplicados.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredHistory.length)} de {filteredHistory.length}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recurrence alerts */}
         <Card className="border-warning/40 bg-warning/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-warning">
               <AlertTriangle className="h-5 w-5" />
-              Alertas de recorrência (queima frequente)
+              Alertas de Recorrência
             </CardTitle>
-            <CardDescription>
-              Critérios: alerta quando poste queimar 2 vezes em 30 dias ou acumular 5+ falhas totais.
-            </CardDescription>
+            <CardDescription>Postes com frequência de queima acima do normal</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {criticalRecurrence.map((record) => (
-              <div key={record.poleId} className="rounded-lg border bg-background p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{record.poleId} • {record.address}</p>
-                    <p className="text-sm text-muted-foreground">Bairro: {record.neighborhood}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Média de reparo: {record.avgRepairHours}h</p>
-                  </div>
-                  <div className="flex gap-2">
-                    {record.failuresTotal >= 5 && <Badge variant="destructive">{record.failuresTotal} falhas totais</Badge>}
-                    {record.failuresLast30Days >= 2 && <Badge className="bg-warning text-warning-foreground">{record.failuresLast30Days} em 30 dias</Badge>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Histórico de queima por poste</CardTitle>
-            <CardDescription>
-              Transparência por ativo: quantas vezes cada poste queimou e frequência no período recente.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {failureRecords.map((record) => {
-                const isAlert = record.failuresTotal >= 5 || record.failuresLast30Days >= 2;
-                return (
-                  <div key={`history-${record.poleId}`} className="rounded-lg border p-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div>
-                        <p className="font-semibold">{record.poleId} • {record.address}</p>
-                        <p className="text-sm text-muted-foreground">{record.neighborhood}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{record.failuresTotal} queimas totais</Badge>
-                        <Badge variant="outline">{record.failuresLast30Days} em 30 dias</Badge>
-                        {isAlert && <Badge className="bg-warning text-warning-foreground">Frequência fora do normal</Badge>}
-                      </div>
+            {MOCK_POLES.map(pole => {
+              const recurrence = getRecurrenceLevel(pole.id);
+              if (!recurrence) return null;
+              const stats = getPoleStats(pole.id);
+              return (
+                <div key={pole.id} className="rounded-lg border bg-background p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{pole.id} • {pole.address}</p>
+                      <p className="text-sm text-muted-foreground">Bairro: {pole.neighborhood}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Tempo médio: {stats.avgResolution.toFixed(1)} dias</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge className={
+                        recurrence.level === 'CRITICO' ? 'bg-destructive text-destructive-foreground' :
+                        recurrence.level === 'MEDIO' ? 'bg-warning text-warning-foreground' :
+                        'bg-muted text-muted-foreground'
+                      }>
+                        {recurrence.level}
+                      </Badge>
+                      <Badge variant="outline">{recurrence.totalOcorrencias} total</Badge>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Prévia gerencial do período</CardTitle>
-            <CardDescription>Indicadores para acompanhamento de eficiência e transparência municipal.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">Denúncias Recebidas</p>
-                <p className="text-2xl font-bold">127</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">Manutenções Realizadas</p>
-                <p className="text-2xl font-bold">98</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">Taxa de Resolução</p>
-                <p className="text-2xl font-bold text-success">77%</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">Tempo Médio</p>
-                <p className="text-2xl font-bold">18h</p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="font-semibold mb-3">Bairros com maior recorrência (30 dias)</h3>
-              <div className="grid md:grid-cols-3 gap-3">
-                {hotNeighborhoods.map((item) => (
-                  <div key={item.neighborhood} className="border rounded-lg p-3 bg-card">
-                    <p className="font-medium">{item.neighborhood}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                      <Clock className="h-4 w-4" />
-                      {item.occurrences} ocorrências no período
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              );
+            }).filter(Boolean)}
           </CardContent>
         </Card>
       </div>
