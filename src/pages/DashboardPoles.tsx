@@ -226,7 +226,7 @@ export default function DashboardPoles() {
       </div>
 
       <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
-      <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} />
+      <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} existingPoles={poles} />
     </DashboardLayout>
   );
 }
