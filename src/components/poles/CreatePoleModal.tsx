@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,27 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PoleStatus } from '@/types';
 import { toast } from 'sonner';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const newPoleIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
 
 interface CreatePoleModalProps {
   open: boolean;
@@ -22,6 +43,13 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: Creat
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [status, setStatus] = useState<PoleStatus>('FUNCIONANDO');
+  const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLatitude(lat.toFixed(6));
+    setLongitude(lng.toFixed(6));
+    setMarkerPos([lat, lng]);
+  };
 
   const handleSubmit = () => {
     if (!address || !neighborhood || !latitude || !longitude) {
@@ -48,6 +76,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: Creat
     setLatitude('');
     setLongitude('');
     setStatus('FUNCIONANDO');
+    setMarkerPos(null);
   };
 
   const handleGetLocation = () => {
@@ -65,7 +94,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: Creat
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Poste</DialogTitle>
           <DialogDescription>ID do poste: {nextId}</DialogDescription>
@@ -91,20 +120,36 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: Creat
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Latitude *</Label>
-              <Input placeholder="-15.3989" value={latitude} onChange={e => setLatitude(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Longitude *</Label>
-              <Input placeholder="-42.3091" value={longitude} onChange={e => setLongitude(e.target.value)} />
+          {/* Map for location selection */}
+          <div className="space-y-2">
+            <Label>📍 Clique no mapa para selecionar a localização *</Label>
+            <div className="rounded-lg overflow-hidden border border-border h-[250px]">
+              <MapContainer
+                center={[-15.3989, -42.3091]}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                className="z-0"
+              >
+                <TileLayer
+                  attribution='&copy; OpenStreetMap'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <MapClickHandler onLocationSelect={handleLocationSelect} />
+                {markerPos && <Marker position={markerPos} icon={newPoleIcon} />}
+              </MapContainer>
             </div>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleGetLocation} type="button" className="w-full">
-            Usar minha localização atual
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Latitude *</Label>
+              <Input placeholder="-15.3989" value={latitude} onChange={e => setLatitude(e.target.value)} readOnly className="bg-muted/50" />
+            </div>
+            <div className="space-y-2">
+              <Label>Longitude *</Label>
+              <Input placeholder="-42.3091" value={longitude} onChange={e => setLongitude(e.target.value)} readOnly className="bg-muted/50" />
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label>Status Inicial</Label>
