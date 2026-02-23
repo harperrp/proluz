@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PoleStatus } from '@/types';
+import { Pole, PoleStatus } from '@/types';
 import { toast } from 'sonner';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -18,6 +19,18 @@ const newPoleIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
+
+const existingPoleIcon = (status: PoleStatus) => {
+  const color = status === 'FUNCIONANDO' ? 'green' : 'red';
+  return new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [20, 33],
+    iconAnchor: [10, 33],
+    popupAnchor: [1, -28],
+    shadowSize: [33, 33],
+  });
+};
 
 function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -33,11 +46,12 @@ interface CreatePoleModalProps {
   onOpenChange: (open: boolean) => void;
   onCreated: (pole: { id: string; address: string; neighborhood: string; latitude: number; longitude: number; status: PoleStatus }) => void;
   nextId: string;
+  existingPoles?: Pole[];
 }
 
 const NEIGHBORHOODS = ['Centro', 'Nova Esperança', 'Vila Nova', 'Jardim das Acácias', 'Bela Vista', 'Alto da Serra', 'Industrial'];
 
-export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: CreatePoleModalProps) {
+export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existingPoles = [] }: CreatePoleModalProps) {
   const [address, setAddress] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [latitude, setLatitude] = useState('');
@@ -135,6 +149,20 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId }: Creat
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <MapClickHandler onLocationSelect={handleLocationSelect} />
+                {existingPoles.map(pole => (
+                  <Marker key={pole.id} position={[pole.latitude, pole.longitude]} icon={existingPoleIcon(pole.status)}>
+                    <Popup>
+                      <div className="text-xs">
+                        <strong>Poste #{pole.id}</strong>
+                        <p className="text-gray-600">{pole.address}</p>
+                        <p className="text-gray-500">{pole.neighborhood}</p>
+                        <Badge className={`mt-1 text-[10px] ${pole.status === 'FUNCIONANDO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {pole.status === 'FUNCIONANDO' ? 'Funcionando' : 'Queimado'}
+                        </Badge>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
                 {markerPos && <Marker position={markerPos} icon={newPoleIcon} />}
               </MapContainer>
             </div>

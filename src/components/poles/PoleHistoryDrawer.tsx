@@ -216,7 +216,7 @@ export function PoleHistoryDrawer({ pole, open, onOpenChange }: PoleHistoryDrawe
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[480px] lg:w-[520px] p-0 border-l-0 shadow-2xl">
+      <SheetContent side="right" className="w-full sm:w-[480px] lg:w-[520px] sm:max-w-[520px] p-0 border-l-0 shadow-2xl">
         {loading ? (
           <KPISkeleton />
         ) : (
