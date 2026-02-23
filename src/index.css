@@ -198,3 +198,8 @@
     50% { opacity: 0.7; }
   }
 }
+
+/* Ensure Radix overlays appear above Leaflet map layers */
+[data-radix-portal] [data-state] {
+  z-index: 1100 !important;
+}
