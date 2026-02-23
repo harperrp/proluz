@@ -82,8 +82,14 @@ export function PoleMap({
   const mapRef = useRef<L.Map | null>(null);
 
   const openHistory = (pole: Pole) => {
-    setHistoryPole(pole);
-    setHistoryOpen(true);
+    // Close any open Leaflet popup first to avoid DOM conflicts with Radix Dialog
+    if (mapRef.current) {
+      mapRef.current.closePopup();
+    }
+    setTimeout(() => {
+      setHistoryPole(pole);
+      setHistoryOpen(true);
+    }, 100);
   };
 
   useEffect(() => {
