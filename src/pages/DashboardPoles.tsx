@@ -4,22 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Lightbulb, Search, Plus, MapPin, History, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Lightbulb, Search, Plus, MapPin, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pole, PoleStatus } from '@/types';
 import { MOCK_POLES, getPoleStats, getRecurrenceLevel, formatDateBR } from '@/data/mockData';
-import { PoleHistoryModal } from '@/components/poles/PoleHistoryModal';
+import { PoleHistoryDrawer } from '@/components/poles/PoleHistoryDrawer';
 import { CreatePoleModal } from '@/components/poles/CreatePoleModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function DashboardPoles() {
+  const { hasPermission } = useAuth();
   const [poles, setPoles] = useState<Pole[]>(MOCK_POLES);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PoleStatus | 'TODOS'>('TODOS');
   const [neighborhoodFilter, setNeighborhoodFilter] = useState('all');
 
-  // Modals
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -36,16 +38,12 @@ export default function DashboardPoles() {
 
   const workingCount = poles.filter(p => p.status === 'FUNCIONANDO').length;
   const brokenCount = poles.filter(p => p.status === 'QUEIMADO').length;
-
   const nextPoleId = `P-${String(poles.length + 1).padStart(3, '0')}`;
 
+  const canViewHistory = hasPermission(['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']);
+
   const handleCreatePole = (data: { id: string; address: string; neighborhood: string; latitude: number; longitude: number; status: PoleStatus }) => {
-    const newPole: Pole = {
-      ...data,
-      cityHallId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const newPole: Pole = { ...data, cityHallId: '1', createdAt: new Date(), updatedAt: new Date() };
     setPoles(prev => [...prev, newPole]);
   };
 
@@ -89,9 +87,9 @@ export default function DashboardPoles() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Funcionando</p>
-                  <p className="text-2xl font-bold text-success">{workingCount}</p>
+                  <p className="text-2xl font-bold text-[hsl(var(--success))]">{workingCount}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-success" />
+                <CheckCircle className="h-8 w-8 text-[hsl(var(--success))]" />
               </div>
             </CardContent>
           </Card>
@@ -117,9 +115,7 @@ export default function DashboardPoles() {
                 <Input placeholder="Buscar por ID ou endereço..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
               </div>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PoleStatus | 'TODOS')}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TODOS">Todos os Status</SelectItem>
                   <SelectItem value="FUNCIONANDO">Funcionando</SelectItem>
@@ -127,9 +123,7 @@ export default function DashboardPoles() {
                 </SelectContent>
               </Select>
               <Select value={neighborhoodFilter} onValueChange={setNeighborhoodFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Bairro" />
-                </SelectTrigger>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Bairro" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Bairros</SelectItem>
                   {neighborhoods.map(n => (
@@ -192,7 +186,7 @@ export default function DashboardPoles() {
                             {recurrence && (
                               <Badge variant="outline" className={
                                 recurrence.level === 'CRITICO' ? 'border-destructive text-destructive' :
-                                recurrence.level === 'MEDIO' ? 'border-warning text-warning' :
+                                recurrence.level === 'MEDIO' ? 'border-[hsl(var(--warning))] text-[hsl(var(--warning))]' :
                                 'border-muted-foreground'
                               }>
                                 {recurrence.level}
@@ -202,14 +196,24 @@ export default function DashboardPoles() {
                         </TableCell>
                         <TableCell>{formatDateBR(pole.updatedAt)}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setHistoryPole(pole); setHistoryOpen(true); }}
-                          >
-                            <History className="h-4 w-4 mr-1" />
-                            Histórico
-                          </Button>
+                          {canViewHistory && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--accent))]/90 hover:scale-105 hover:shadow-md transition-all duration-200 active:scale-95"
+                                    onClick={() => { setHistoryPole(pole); setHistoryOpen(true); }}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Visualizar histórico completo</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -221,7 +225,7 @@ export default function DashboardPoles() {
         </Card>
       </div>
 
-      <PoleHistoryModal pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
+      <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
       <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} />
     </DashboardLayout>
   );

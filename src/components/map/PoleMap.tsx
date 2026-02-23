@@ -6,6 +6,7 @@ import { Pole, PoleStatus } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { getPoleStats, getRecurrenceLevel, formatDateBR, daysSince } from '@/data/mockData';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -173,7 +174,7 @@ export function PoleMap({
                 eventHandlers={{ click: () => handlePoleClick(pole) }}
               >
                 <Popup>
-                  <div className="p-2 min-w-[240px]">
+                  <div className="p-2 min-w-[260px]">
                     <div className="flex items-center gap-2 mb-2">
                       <strong>Poste #{pole.id}</strong>
                       <span
@@ -183,12 +184,38 @@ export function PoleMap({
                       >
                         {pole.status === 'FUNCIONANDO' ? 'Funcionando' : 'Queimado'}
                       </span>
+                      {(() => {
+                        const rec = getRecurrenceLevel(pole.id);
+                        return rec && rec.level === 'CRITICO' ? (
+                          <span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-600 text-white">🚨</span>
+                        ) : null;
+                      })()}
                     </div>
                     <p className="text-sm text-gray-600 mb-1">{pole.address}</p>
                     <p className="text-xs text-gray-500">Bairro: {pole.neighborhood}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       {pole.latitude.toFixed(6)}, {pole.longitude.toFixed(6)}
                     </p>
+                    {/* History summary */}
+                    {(() => {
+                      const poleStats = getPoleStats(pole.id);
+                      if (poleStats.total === 0) return null;
+                      const lastRecord = poleStats.history[0];
+                      return (
+                        <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-600 space-y-0.5">
+                          <p className="font-semibold">Este poste já queimou {poleStats.total} vez{poleStats.total > 1 ? 'es' : ''}</p>
+                          {lastRecord && (
+                            <p>
+                              Última: Queimado em {formatDateBR(lastRecord.dateQueimado)}
+                              {lastRecord.dateConsertado
+                                ? ` | Consertado em ${formatDateBR(lastRecord.dateConsertado)}`
+                                : ` | Ainda não consertado (${daysSince(lastRecord.dateQueimado)}d)`
+                              }
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {insight && (
                       <p className="text-xs text-gray-500 mt-2">
                         Histórico: {insight.failuresTotal} queimas totais • {insight.failuresLast30Days} em 30 dias
