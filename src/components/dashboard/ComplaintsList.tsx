@@ -159,7 +159,7 @@ export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, on
           </p>
         </div>
       )}
-      {complaints.map(complaint => {
+      {complaints.filter(c => !bannedCpfs.has(c.citizenCpf)).map(complaint => {
         const status = statusConfig[complaint.status];
         const StatusIcon = status.icon;
 
