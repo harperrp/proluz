@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search, Plus, MapPin, Users, Lightbulb, MoreHorizontal } from 'lucide-react';
+import { Building2, Search, Plus, MapPin, Users, Lightbulb, MoreHorizontal, LogIn } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -186,6 +186,10 @@ export default function DashboardCityHalls() {
                             <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { toast.info(`Acessando ${ch.name}`, { description: `${ch.city}/${ch.state}` }); }}>
+                              <LogIn className="h-4 w-4 mr-2" />
+                              Acessar Prefeitura
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEdit(ch)}>Editar</DropdownMenuItem>
                             <DropdownMenuItem className={ch.status === 'ATIVO' ? 'text-destructive' : 'text-success'} onClick={() => toggleStatus(ch)}>
                               {ch.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
