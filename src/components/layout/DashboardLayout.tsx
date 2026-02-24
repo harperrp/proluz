@@ -208,18 +208,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
           <div className="container py-6 lg:py-8 space-y-4">
-            <div className="rounded-lg border bg-card p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <span className="font-medium">Município ativo no sistema</span>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {CURRENT_MUNICIPALITY}
-                </Badge>
-              </div>
-            </div>
             {children}
           </div>
         </main>
