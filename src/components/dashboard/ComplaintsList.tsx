@@ -71,12 +71,14 @@ const statusConfig: Record<ComplaintStatus, { label: string; className: string; 
 };
 
 interface ComplaintsListProps {
-  bannedCpfs: Set<string>;
-  onBanCpf: (cpf: string, name: string) => void;
-  onUnbanCpf: (cpf: string) => void;
+  bannedCpfs?: Set<string>;
+  onBanCpf?: (cpf: string, name: string) => void;
+  onUnbanCpf?: (cpf: string) => void;
 }
 
-export function ComplaintsList({ bannedCpfs, onBanCpf, onUnbanCpf }: ComplaintsListProps) {
+const EMPTY_SET = new Set<string>();
+
+export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, onUnbanCpf = () => {} }: ComplaintsListProps) {
   const [complaints, setComplaints] = useState<Complaint[]>(MOCK_COMPLAINTS);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
