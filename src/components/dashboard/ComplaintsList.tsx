@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { MapPin, Clock, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, XCircle, AlertCircle, Eye, Ban } from 'lucide-react';
 import { Complaint, ComplaintStatus, REJECTION_REASONS } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -73,9 +74,11 @@ export function ComplaintsList() {
   const [complaints, setComplaints] = useState<Complaint[]>(MOCK_COMPLAINTS);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [action, setAction] = useState<'view' | 'approve' | 'reject'>('view');
   const [rejectionReason, setRejectionReason] = useState('');
   const [observations, setObservations] = useState('');
+  const [bannedCpfs, setBannedCpfs] = useState<Set<string>>(new Set());
 
   const handleAction = (complaint: Complaint, actionType: 'view' | 'approve' | 'reject') => {
     setSelectedComplaint(complaint);
@@ -117,6 +120,30 @@ export function ComplaintsList() {
     }
   };
 
+  const handleBanCpf = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    setBanDialogOpen(true);
+  };
+
+  const confirmBan = () => {
+    if (selectedComplaint) {
+      setBannedCpfs(prev => new Set(prev).add(selectedComplaint.citizenCpf));
+      toast.success(`CPF ${selectedComplaint.citizenCpf} banido com sucesso`, {
+        description: `Denúncias de ${selectedComplaint.citizenName} serão bloqueadas.`,
+      });
+      setBanDialogOpen(false);
+    }
+  };
+
+  const handleUnban = (cpf: string) => {
+    setBannedCpfs(prev => {
+      const next = new Set(prev);
+      next.delete(cpf);
+      return next;
+    });
+    toast.info('CPF desbanido com sucesso');
+  };
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
@@ -129,6 +156,22 @@ export function ComplaintsList() {
 
   return (
     <div className="space-y-4">
+      {/* Banned CPFs banner */}
+      {bannedCpfs.size > 0 && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <p className="text-sm font-medium text-destructive mb-2 flex items-center gap-1.5">
+            <Ban className="h-4 w-4" /> CPFs Banidos ({bannedCpfs.size})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {Array.from(bannedCpfs).map(cpf => (
+              <Badge key={cpf} variant="destructive" className="gap-1 cursor-pointer" onClick={() => handleUnban(cpf)}>
+                {cpf} <XCircle className="h-3 w-3" />
+              </Badge>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5">Clique para desbanir</p>
+        </div>
+      )}
       {complaints.map(complaint => {
         const status = statusConfig[complaint.status];
         const StatusIcon = status.icon;
@@ -146,6 +189,11 @@ export function ComplaintsList() {
                     {status.label}
                   </Badge>
                   <span className="text-xs text-muted-foreground">#{complaint.id}</span>
+                  {bannedCpfs.has(complaint.citizenCpf) && (
+                    <Badge variant="destructive" className="gap-1 text-[10px]">
+                      <Ban className="h-3 w-3" /> CPF Banido
+                    </Badge>
+                  )}
                 </div>
                 
                 <p className="text-sm">{complaint.description}</p>
@@ -172,7 +220,7 @@ export function ComplaintsList() {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -180,6 +228,17 @@ export function ComplaintsList() {
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
+                {!bannedCpfs.has(complaint.citizenCpf) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleBanCpf(complaint)}
+                    title="Banir CPF"
+                  >
+                    <Ban className="h-4 w-4" />
+                  </Button>
+                )}
                 {complaint.status === 'PENDENTE' && (
                   <>
                     <Button
@@ -283,6 +342,38 @@ export function ComplaintsList() {
                 Confirmar Rejeição
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ban confirmation dialog */}
+      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Ban className="h-5 w-5" />
+              Banir CPF
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação impedirá que este CPF envie novas denúncias.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedComplaint && (
+            <div className="space-y-2 text-sm rounded-lg bg-muted p-3">
+              <p><strong>Nome:</strong> {selectedComplaint.citizenName}</p>
+              <p><strong>CPF:</strong> {selectedComplaint.citizenCpf}</p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={confirmBan}>
+              <Ban className="h-4 w-4 mr-1" />
+              Confirmar Banimento
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
