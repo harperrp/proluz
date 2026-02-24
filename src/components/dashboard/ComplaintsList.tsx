@@ -151,7 +151,7 @@ export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, on
 
   return (
     <div className="space-y-4">
-      {complaints.filter(c => !bannedCpfs.has(c.citizenCpf)).map(complaint => {
+      {complaints.filter(c => !bannedCpfs.has(c.citizenCpf) && c.status === 'PENDENTE').map(complaint => {
         const status = statusConfig[complaint.status];
         const StatusIcon = status.icon;
 
