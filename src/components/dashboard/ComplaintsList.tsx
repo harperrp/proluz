@@ -151,14 +151,6 @@ export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, on
 
   return (
     <div className="space-y-4">
-      {/* Banned CPFs indicator */}
-      {bannedCpfs.size > 0 && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-          <p className="text-sm font-medium text-destructive flex items-center gap-1.5">
-            <Ban className="h-4 w-4" /> {bannedCpfs.size} CPF(s) banido(s) — veja a aba "CPFs Banidos" para gerenciar
-          </p>
-        </div>
-      )}
       {complaints.filter(c => !bannedCpfs.has(c.citizenCpf)).map(complaint => {
         const status = statusConfig[complaint.status];
         const StatusIcon = status.icon;
