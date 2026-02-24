@@ -70,7 +70,13 @@ const statusConfig: Record<ComplaintStatus, { label: string; className: string; 
   REJEITADA: { label: 'Rejeitada', className: 'status-badge-rejected', icon: XCircle },
 };
 
-export function ComplaintsList() {
+interface ComplaintsListProps {
+  bannedCpfs: Set<string>;
+  onBanCpf: (cpf: string, name: string) => void;
+  onUnbanCpf: (cpf: string) => void;
+}
+
+export function ComplaintsList({ bannedCpfs, onBanCpf, onUnbanCpf }: ComplaintsListProps) {
   const [complaints, setComplaints] = useState<Complaint[]>(MOCK_COMPLAINTS);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,7 +84,6 @@ export function ComplaintsList() {
   const [action, setAction] = useState<'view' | 'approve' | 'reject'>('view');
   const [rejectionReason, setRejectionReason] = useState('');
   const [observations, setObservations] = useState('');
-  const [bannedCpfs, setBannedCpfs] = useState<Set<string>>(new Set());
 
   const handleAction = (complaint: Complaint, actionType: 'view' | 'approve' | 'reject') => {
     setSelectedComplaint(complaint);
@@ -127,21 +132,9 @@ export function ComplaintsList() {
 
   const confirmBan = () => {
     if (selectedComplaint) {
-      setBannedCpfs(prev => new Set(prev).add(selectedComplaint.citizenCpf));
-      toast.success(`CPF ${selectedComplaint.citizenCpf} banido com sucesso`, {
-        description: `Denúncias de ${selectedComplaint.citizenName} serão bloqueadas.`,
-      });
+      onBanCpf(selectedComplaint.citizenCpf, selectedComplaint.citizenName);
       setBanDialogOpen(false);
     }
-  };
-
-  const handleUnban = (cpf: string) => {
-    setBannedCpfs(prev => {
-      const next = new Set(prev);
-      next.delete(cpf);
-      return next;
-    });
-    toast.info('CPF desbanido com sucesso');
   };
 
   const formatDate = (date: Date) => {
@@ -156,20 +149,12 @@ export function ComplaintsList() {
 
   return (
     <div className="space-y-4">
-      {/* Banned CPFs banner */}
+      {/* Banned CPFs indicator */}
       {bannedCpfs.size > 0 && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-          <p className="text-sm font-medium text-destructive mb-2 flex items-center gap-1.5">
-            <Ban className="h-4 w-4" /> CPFs Banidos ({bannedCpfs.size})
+          <p className="text-sm font-medium text-destructive flex items-center gap-1.5">
+            <Ban className="h-4 w-4" /> {bannedCpfs.size} CPF(s) banido(s) — veja a aba "CPFs Banidos" para gerenciar
           </p>
-          <div className="flex flex-wrap gap-2">
-            {Array.from(bannedCpfs).map(cpf => (
-              <Badge key={cpf} variant="destructive" className="gap-1 cursor-pointer" onClick={() => handleUnban(cpf)}>
-                {cpf} <XCircle className="h-3 w-3" />
-              </Badge>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1.5">Clique para desbanir</p>
         </div>
       )}
       {complaints.map(complaint => {

@@ -227,7 +227,7 @@ export default function Dashboard() {
               <CardDescription>Últimas denúncias recebidas dos cidadãos</CardDescription>
             </CardHeader>
             <CardContent>
-              <ComplaintsList />
+              <ComplaintsList bannedCpfs={new Set()} onBanCpf={() => {}} onUnbanCpf={() => {}} />
             </CardContent>
           </Card>
         )}
