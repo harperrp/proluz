@@ -3,7 +3,6 @@ import {
   AlertTriangle, 
   CheckCircle, 
   Clock,
-  TrendingUp,
   MapPin
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -30,15 +29,6 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-
-// Mock data for charts
-const neighborhoodData = [
-  { name: 'Centro', queimados: 8, total: 45 },
-  { name: 'Jardim', queimados: 5, total: 32 },
-  { name: 'Vila Nova', queimados: 12, total: 28 },
-  { name: 'Industrial', queimados: 3, total: 20 },
-  { name: 'Residencial', queimados: 6, total: 35 },
-];
 
 const statusData = [
   { name: 'Funcionando', value: 142, color: 'hsl(142, 72%, 35%)' },
@@ -170,37 +160,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Neighborhood Ranking */}
-        {canViewFullStats && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Bairros com Mais Problemas
-              </CardTitle>
-              <CardDescription>Ranking de bairros por quantidade de postes queimados</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={neighborhoodData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" className="text-xs" />
-                    <YAxis dataKey="name" type="category" className="text-xs" width={80} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar dataKey="queimados" name="Queimados" fill="hsl(var(--chart-4))" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Map Section */}
         <Card>
