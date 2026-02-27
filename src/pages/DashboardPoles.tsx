@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Lightbulb, Search, Plus, MapPin, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Lightbulb, Search, Plus, MapPin, Eye, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Pole, PoleStatus } from '@/types';
 import { MOCK_POLES, getPoleStats, getRecurrenceLevel, formatDateBR } from '@/data/mockData';
 import { PoleHistoryDrawer } from '@/components/poles/PoleHistoryDrawer';
@@ -25,6 +26,7 @@ export default function DashboardPoles() {
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Pole | null>(null);
 
   const neighborhoods = [...new Set(poles.map(p => p.neighborhood))];
 
@@ -53,6 +55,13 @@ export default function DashboardPoles() {
     toast.success(`Status atualizado: ${pole.id}`, {
       description: `Agora está ${newStatus === 'FUNCIONANDO' ? 'consertado' : 'queimado'}.`,
     });
+  };
+
+  const handleDeletePole = () => {
+    if (!deleteTarget) return;
+    setPoles(prev => prev.filter(p => p.id !== deleteTarget.id));
+    toast.success(`Poste ${deleteTarget.id} excluído com sucesso.`);
+    setDeleteTarget(null);
   };
 
   return (
@@ -196,24 +205,43 @@ export default function DashboardPoles() {
                         </TableCell>
                         <TableCell>{formatDateBR(pole.updatedAt)}</TableCell>
                         <TableCell className="text-right">
-                          {canViewHistory && (
+                          <div className="flex items-center gap-1 justify-end">
+                            {canViewHistory && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--accent))]/90 hover:scale-105 hover:shadow-md transition-all duration-200 active:scale-95"
+                                      onClick={() => { setHistoryPole(pole); setHistoryOpen(true); }}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Visualizar histórico completo</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     size="sm"
-                                    className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] hover:bg-[hsl(var(--accent))]/90 hover:scale-105 hover:shadow-md transition-all duration-200 active:scale-95"
-                                    onClick={() => { setHistoryPole(pole); setHistoryOpen(true); }}
+                                    variant="destructive"
+                                    className="hover:scale-105 hover:shadow-md transition-all duration-200 active:scale-95"
+                                    onClick={() => setDeleteTarget(pole)}
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Visualizar histórico completo</p>
+                                  <p>Excluir poste</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -227,6 +255,23 @@ export default function DashboardPoles() {
 
       <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
       <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} existingPoles={poles} />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Poste {deleteTarget?.id}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o poste <strong>{deleteTarget?.id}</strong> localizado em <strong>{deleteTarget?.address}</strong>? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePole} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
