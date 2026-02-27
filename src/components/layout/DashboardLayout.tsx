@@ -206,7 +206,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto min-h-screen">
           <div className="container py-6 lg:py-8 space-y-4">
             {children}
           </div>
