@@ -26,7 +26,6 @@ interface MaintenanceItem {
   id: string;
   poleId: string;
   address: string;
-  neighborhood: string;
   latitude: number;
   longitude: number;
   reportedAt: Date;
@@ -53,7 +52,6 @@ const INITIAL_MAINTENANCE: MaintenanceItem[] = [
     id: '1',
     poleId: 'P-001',
     address: 'Av. Principal, 200',
-    neighborhood: 'Centro',
     latitude: -15.3989,
     longitude: -42.3091,
     reportedAt: new Date('2024-01-15'),
@@ -64,7 +62,6 @@ const INITIAL_MAINTENANCE: MaintenanceItem[] = [
     id: '2',
     poleId: 'P-004',
     address: 'Rua Nova, 75',
-    neighborhood: 'Vila Nova',
     latitude: -15.4002,
     longitude: -42.3113,
     reportedAt: new Date('2024-01-14'),
@@ -75,7 +72,6 @@ const INITIAL_MAINTENANCE: MaintenanceItem[] = [
     id: '3',
     poleId: 'P-007',
     address: 'Rua das Árvores, 120',
-    neighborhood: 'Jardim',
     latitude: -15.3994,
     longitude: -42.3102,
     reportedAt: new Date('2024-01-16'),
@@ -367,7 +363,7 @@ export default function DashboardMaintenance() {
 
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          {item.address} - {item.neighborhood}
+                          {item.address}
                         </p>
 
                         <p className="text-sm">{item.description}</p>

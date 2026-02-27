@@ -37,25 +37,6 @@ const buildOccurrencesByMonth = () => {
     });
 };
 
-const buildNeighborhoodStats = () => {
-  const stats: Record<string, { total: number; avgDays: number; count: number }> = {};
-  MOCK_POLE_HISTORY.forEach(h => {
-    const pole = MOCK_POLES.find(p => p.id === h.poleId);
-    const neighborhood = pole?.neighborhood || 'Desconhecido';
-    if (!stats[neighborhood]) stats[neighborhood] = { total: 0, avgDays: 0, count: 0 };
-    stats[neighborhood].total++;
-    if (h.tempoResolucaoDias !== null) {
-      stats[neighborhood].avgDays += h.tempoResolucaoDias;
-      stats[neighborhood].count++;
-    }
-  });
-  return Object.entries(stats).map(([name, val]) => ({
-    name,
-    ocorrencias: val.total,
-    tempoMedio: val.count > 0 ? Math.round(val.avgDays / val.count * 10) / 10 : 0,
-  })).sort((a, b) => b.ocorrencias - a.ocorrencias);
-};
-
 const buildTopRecurrent = () => {
   const poleCounts: Record<string, number> = {};
   MOCK_POLE_HISTORY.forEach(h => {
@@ -64,7 +45,7 @@ const buildTopRecurrent = () => {
   return Object.entries(poleCounts)
     .map(([poleId, count]) => {
       const pole = MOCK_POLES.find(p => p.id === poleId);
-      return { poleId, count, address: pole?.address || '', neighborhood: pole?.neighborhood || '' };
+      return { poleId, count, address: pole?.address || '' };
     })
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
@@ -81,13 +62,11 @@ export default function DashboardReports() {
   // Filters
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
-  const [filterNeighborhood, setFilterNeighborhood] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTecnico, setFilterTecnico] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
 
-  const neighborhoods = [...new Set(MOCK_POLES.map(p => p.neighborhood).filter(Boolean))];
   const tecnicos = [...new Set(MOCK_POLE_HISTORY.map(h => h.tecnicoName).filter(Boolean))];
 
   // Filtered history
@@ -96,7 +75,6 @@ export default function DashboardReports() {
       const pole = MOCK_POLES.find(p => p.id === h.poleId);
       if (dateStart && h.dateQueimado < new Date(dateStart)) return false;
       if (dateEnd && h.dateQueimado > new Date(dateEnd + 'T23:59:59')) return false;
-      if (filterNeighborhood !== 'all' && pole?.neighborhood !== filterNeighborhood) return false;
       if (filterStatus === 'queimado' && h.dateConsertado !== null) return false;
       if (filterStatus === 'consertado' && h.dateConsertado === null) return false;
       if (filterTecnico !== 'all' && h.tecnicoName !== filterTecnico) return false;
@@ -106,7 +84,7 @@ export default function DashboardReports() {
       }
       return true;
     }).sort((a, b) => b.dateQueimado.getTime() - a.dateQueimado.getTime());
-  }, [dateStart, dateEnd, filterNeighborhood, filterStatus, filterTecnico, searchTerm]);
+  }, [dateStart, dateEnd, filterStatus, filterTecnico, searchTerm]);
 
   // Summary
   const totalOcorrencias = filteredHistory.length;
@@ -120,21 +98,12 @@ export default function DashboardReports() {
   filteredHistory.forEach(h => { poleCounts[h.poleId] = (poleCounts[h.poleId] || 0) + 1; });
   const topPole = Object.entries(poleCounts).sort((a, b) => b[1] - a[1])[0];
 
-  // Most incident neighborhood
-  const neighCounts: Record<string, number> = {};
-  filteredHistory.forEach(h => {
-    const pole = MOCK_POLES.find(p => p.id === h.poleId);
-    const n = pole?.neighborhood || 'Desconhecido';
-    neighCounts[n] = (neighCounts[n] || 0) + 1;
-  });
-  const topNeigh = Object.entries(neighCounts).sort((a, b) => b[1] - a[1])[0];
 
   // Pagination
   const totalPages = Math.ceil(filteredHistory.length / PAGE_SIZE);
   const pagedHistory = filteredHistory.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const monthlyData = buildOccurrencesByMonth();
-  const neighborhoodData = buildNeighborhoodStats();
   const topRecurrent = buildTopRecurrent();
 
   const handleExport = (format: string) => {
@@ -168,7 +137,7 @@ export default function DashboardReports() {
             <CardTitle className="text-base">Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <div className="space-y-1">
                 <Label className="text-xs">Data Inicial</Label>
                 <Input type="date" value={dateStart} onChange={e => { setDateStart(e.target.value); setPage(0); }} />
@@ -176,16 +145,6 @@ export default function DashboardReports() {
               <div className="space-y-1">
                 <Label className="text-xs">Data Final</Label>
                 <Input type="date" value={dateEnd} onChange={e => { setDateEnd(e.target.value); setPage(0); }} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Bairro</Label>
-                <Select value={filterNeighborhood} onValueChange={v => { setFilterNeighborhood(v); setPage(0); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {neighborhoods.map(n => <SelectItem key={n} value={n!}>{n}</SelectItem>)}
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Status</Label>
@@ -220,13 +179,13 @@ export default function DashboardReports() {
         </Card>
 
         {/* Summary cards */}
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold">{totalOcorrencias}</p><p className="text-xs text-muted-foreground">Ocorrências</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-destructive">{totalQueimados}</p><p className="text-xs text-muted-foreground">Em aberto</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-success">{totalConsertados}</p><p className="text-xs text-muted-foreground">Resolvidos</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold">{tempoMedio}</p><p className="text-xs text-muted-foreground">Tempo médio (dias)</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-primary">{topPole ? topPole[0] : '—'}</p><p className="text-xs text-muted-foreground">Mais recorrente ({topPole ? topPole[1] : 0}x)</p></CardContent></Card>
-          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-warning">{topNeigh ? topNeigh[0] : '—'}</p><p className="text-xs text-muted-foreground">Bairro líder ({topNeigh ? topNeigh[1] : 0})</p></CardContent></Card>
+          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-primary">{topPole ? topPole[0] : '—'}</p><p className="text-xs text-muted-foreground">Mais recorrente ({topPole ? topPole[1] : 0}x)</p></CardContent></Card>
         </div>
 
         {/* Charts row 1 */}
@@ -276,25 +235,6 @@ export default function DashboardReports() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Tempo Médio por Bairro (dias)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={neighborhoodData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" className="text-xs" />
-                    <YAxis dataKey="name" type="category" className="text-xs" width={120} />
-                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                    <Bar dataKey="tempoMedio" name="Tempo médio" fill="hsl(var(--chart-3))" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Top 10 Postes Recorrentes
@@ -329,7 +269,6 @@ export default function DashboardReports() {
                   <TableRow>
                     <TableHead>Poste</TableHead>
                     <TableHead>Endereço</TableHead>
-                    <TableHead>Bairro</TableHead>
                     <TableHead>Queimado em</TableHead>
                     <TableHead>Consertado em</TableHead>
                     <TableHead>Resolução</TableHead>
@@ -344,7 +283,6 @@ export default function DashboardReports() {
                       <TableRow key={h.id}>
                         <TableCell className="font-medium">{h.poleId}</TableCell>
                         <TableCell>{pole?.address || '—'}</TableCell>
-                        <TableCell>{pole?.neighborhood || '—'}</TableCell>
                         <TableCell>{formatDateBR(h.dateQueimado)}</TableCell>
                         <TableCell>{h.dateConsertado ? formatDateBR(h.dateConsertado) : '—'}</TableCell>
                         <TableCell>{h.tempoResolucaoDias !== null ? `${h.tempoResolucaoDias} dias` : '—'}</TableCell>
@@ -359,7 +297,7 @@ export default function DashboardReports() {
                   })}
                   {pagedHistory.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         Nenhum registro encontrado com os filtros aplicados.
                       </TableCell>
                     </TableRow>
@@ -406,7 +344,6 @@ export default function DashboardReports() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold">{pole.id} • {pole.address}</p>
-                      <p className="text-sm text-muted-foreground">Bairro: {pole.neighborhood}</p>
                       <p className="text-xs text-muted-foreground mt-1">Tempo médio: {stats.avgResolution.toFixed(1)} dias</p>
                     </div>
                     <div className="flex gap-2">

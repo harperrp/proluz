@@ -21,21 +21,20 @@ export default function DashboardPoles() {
   const [poles, setPoles] = useState<Pole[]>(MOCK_POLES);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PoleStatus | 'TODOS'>('TODOS');
-  const [neighborhoodFilter, setNeighborhoodFilter] = useState('all');
+  const [statusChangeTarget, setStatusChangeTarget] = useState<Pole | null>(null);
 
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pole | null>(null);
 
-  const neighborhoods = [...new Set(poles.map(p => p.neighborhood))];
+  
 
   const filteredPoles = poles.filter(pole => {
     const matchesSearch = pole.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          pole.address?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'TODOS' || pole.status === statusFilter;
-    const matchesNeighborhood = neighborhoodFilter === 'all' || pole.neighborhood === neighborhoodFilter;
-    return matchesSearch && matchesStatus && matchesNeighborhood;
+    return matchesSearch && matchesStatus;
   });
 
   const workingCount = poles.filter(p => p.status === 'FUNCIONANDO').length;
@@ -44,17 +43,23 @@ export default function DashboardPoles() {
 
   const canViewHistory = hasPermission(['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']);
 
-  const handleCreatePole = (data: { id: string; address: string; neighborhood: string; latitude: number; longitude: number; status: PoleStatus }) => {
+  const handleCreatePole = (data: { id: string; address: string; latitude: number; longitude: number; status: PoleStatus }) => {
     const newPole: Pole = { ...data, cityHallId: '1', createdAt: new Date(), updatedAt: new Date() };
     setPoles(prev => [...prev, newPole]);
   };
 
   const toggleStatus = (pole: Pole) => {
-    const newStatus: PoleStatus = pole.status === 'FUNCIONANDO' ? 'QUEIMADO' : 'FUNCIONANDO';
-    setPoles(prev => prev.map(p => p.id === pole.id ? { ...p, status: newStatus, updatedAt: new Date() } : p));
-    toast.success(`Status atualizado: ${pole.id}`, {
+    setStatusChangeTarget(pole);
+  };
+
+  const confirmStatusChange = () => {
+    if (!statusChangeTarget) return;
+    const newStatus: PoleStatus = statusChangeTarget.status === 'FUNCIONANDO' ? 'QUEIMADO' : 'FUNCIONANDO';
+    setPoles(prev => prev.map(p => p.id === statusChangeTarget.id ? { ...p, status: newStatus, updatedAt: new Date() } : p));
+    toast.success(`Status atualizado: ${statusChangeTarget.id}`, {
       description: `Agora está ${newStatus === 'FUNCIONANDO' ? 'consertado' : 'queimado'}.`,
     });
+    setStatusChangeTarget(null);
   };
 
   const handleDeletePole = () => {
@@ -131,15 +136,6 @@ export default function DashboardPoles() {
                   <SelectItem value="QUEIMADO">Queimado</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={neighborhoodFilter} onValueChange={setNeighborhoodFilter}>
-                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Bairro" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Bairros</SelectItem>
-                  {neighborhoods.map(n => (
-                    <SelectItem key={n} value={n!}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>
@@ -160,7 +156,6 @@ export default function DashboardPoles() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Endereço</TableHead>
-                    <TableHead>Bairro</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ocorrências</TableHead>
                     <TableHead>Última Atualização</TableHead>
@@ -180,7 +175,6 @@ export default function DashboardPoles() {
                             {pole.address}
                           </div>
                         </TableCell>
-                        <TableCell>{pole.neighborhood}</TableCell>
                         <TableCell>
                           <Badge
                             className={`${pole.status === 'FUNCIONANDO' ? 'status-badge-working' : 'status-badge-broken'} cursor-pointer`}
@@ -268,6 +262,25 @@ export default function DashboardPoles() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeletePole} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!statusChangeTarget} onOpenChange={(open) => { if (!open) setStatusChangeTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar Status do Poste {statusChangeTarget?.id}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja alterar o status do poste <strong>{statusChangeTarget?.id}</strong> de{' '}
+              <strong>{statusChangeTarget?.status === 'FUNCIONANDO' ? 'Funcionando' : 'Queimado'}</strong> para{' '}
+              <strong>{statusChangeTarget?.status === 'FUNCIONANDO' ? 'Queimado' : 'Funcionando'}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusChange}>
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

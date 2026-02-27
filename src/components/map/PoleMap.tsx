@@ -201,7 +201,6 @@ export function PoleMap({
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">{pole.address}</p>
-                    <p className="text-xs text-gray-500">Bairro: {pole.neighborhood}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={(e) => { e.stopPropagation(); openHistory(pole); }}
@@ -266,7 +265,6 @@ export function PoleMap({
                 {selectedPoleId === selectedPole.id && <Badge variant="outline">Selecionado</Badge>}
               </div>
               <p className="text-sm text-muted-foreground">{selectedPole.address}</p>
-              <p className="text-xs text-muted-foreground">Bairro: {selectedPole.neighborhood}</p>
               <p className="text-xs text-muted-foreground">
                 Coordenadas: {selectedPole.latitude.toFixed(6)}, {selectedPole.longitude.toFixed(6)}
               </p>
