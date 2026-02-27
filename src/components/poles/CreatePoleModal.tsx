@@ -49,11 +49,11 @@ interface CreatePoleModalProps {
   existingPoles?: Pole[];
 }
 
-const NEIGHBORHOODS = ['Centro', 'Nova Esperança', 'Vila Nova', 'Jardim das Acácias', 'Bela Vista', 'Alto da Serra', 'Industrial'];
+// Neighborhood is auto-detected from reverse geocoding only
 
 export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existingPoles = [] }: CreatePoleModalProps) {
   const [address, setAddress] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
+  const [neighborhood, setNeighborhood] = useState('Não identificado');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [status, setStatus] = useState<PoleStatus>('FUNCIONANDO');
@@ -74,14 +74,9 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
         const fullAddress = houseNumber ? `${road}, ${houseNumber}` : road;
         if (fullAddress) setAddress(fullAddress);
 
-        const suburb = data.address.suburb || data.address.neighbourhood || data.address.village || '';
-        const matchedNeighborhood = NEIGHBORHOODS.find(n => 
-          suburb.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(suburb.toLowerCase())
-        );
-        if (matchedNeighborhood) {
-          setNeighborhood(matchedNeighborhood);
-        } else if (suburb) {
-          setAddress(prev => prev || suburb);
+        const suburb = data.address.suburb || data.address.neighbourhood || data.address.village || data.address.city_district || '';
+        if (suburb) {
+          setNeighborhood(suburb);
         }
       }
     } catch {
@@ -90,7 +85,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
   };
 
   const handleSubmit = () => {
-    if (!address || !neighborhood || !latitude || !longitude) {
+    if (!address || !latitude || !longitude) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -110,7 +105,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
 
   const resetForm = () => {
     setAddress('');
-    setNeighborhood('');
+    setNeighborhood('Não identificado');
     setLatitude('');
     setLongitude('');
     setStatus('FUNCIONANDO');
@@ -142,20 +137,6 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
           <div className="space-y-2">
             <Label>Endereço *</Label>
             <Input placeholder="Ex: Rua das Flores, 100" value={address} onChange={e => setAddress(e.target.value)} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Bairro *</Label>
-            <Select value={neighborhood} onValueChange={setNeighborhood}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o bairro" />
-              </SelectTrigger>
-              <SelectContent>
-                {NEIGHBORHOODS.map(n => (
-                  <SelectItem key={n} value={n}>{n}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Map for location selection */}
