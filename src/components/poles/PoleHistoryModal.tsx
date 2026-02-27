@@ -33,7 +33,7 @@ export function PoleHistoryModal({ pole, open, onOpenChange }: PoleHistoryModalP
             Histórico — Poste {pole.id}
           </DialogTitle>
           <DialogDescription>
-            {pole.address} — {pole.neighborhood}
+            {pole.address}
           </DialogDescription>
         </DialogHeader>
 

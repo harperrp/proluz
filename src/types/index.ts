@@ -72,7 +72,7 @@ export interface DashboardStats {
   approvedComplaints: number;
   rejectedComplaints: number;
   averageResponseTime: number;
-  neighborhoodRanking: { neighborhood: string; count: number }[];
+  
 }
 
 export const REJECTION_REASONS = [

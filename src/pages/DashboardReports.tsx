@@ -185,7 +185,6 @@ export default function DashboardReports() {
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-success">{totalConsertados}</p><p className="text-xs text-muted-foreground">Resolvidos</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold">{tempoMedio}</p><p className="text-xs text-muted-foreground">Tempo médio (dias)</p></CardContent></Card>
           <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-primary">{topPole ? topPole[0] : '—'}</p><p className="text-xs text-muted-foreground">Mais recorrente ({topPole ? topPole[1] : 0}x)</p></CardContent></Card>
-          <Card><CardContent className="pt-6 text-center"><p className="text-2xl font-bold text-primary">{topPole ? topPole[0] : '—'}</p><p className="text-xs text-muted-foreground">Mais recorrente ({topPole ? topPole[1] : 0}x)</p></CardContent></Card>
         </div>
 
         {/* Charts row 1 */}
