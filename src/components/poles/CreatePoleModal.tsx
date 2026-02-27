@@ -44,16 +44,13 @@ function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number,
 interface CreatePoleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (pole: { id: string; address: string; neighborhood: string; latitude: number; longitude: number; status: PoleStatus }) => void;
+  onCreated: (pole: { id: string; address: string; latitude: number; longitude: number; status: PoleStatus }) => void;
   nextId: string;
   existingPoles?: Pole[];
 }
 
-// Neighborhood is auto-detected from reverse geocoding only
-
 export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existingPoles = [] }: CreatePoleModalProps) {
   const [address, setAddress] = useState('');
-  const [neighborhood, setNeighborhood] = useState('Não identificado');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [status, setStatus] = useState<PoleStatus>('FUNCIONANDO');
@@ -73,11 +70,6 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
         const houseNumber = data.address.house_number || '';
         const fullAddress = houseNumber ? `${road}, ${houseNumber}` : road;
         if (fullAddress) setAddress(fullAddress);
-
-        const suburb = data.address.suburb || data.address.neighbourhood || data.address.village || data.address.city_district || '';
-        if (suburb) {
-          setNeighborhood(suburb);
-        }
       }
     } catch {
       // Silently fail - user can fill manually
@@ -97,7 +89,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
       return;
     }
 
-    onCreated({ id: nextId, address, neighborhood, latitude: lat, longitude: lng, status });
+    onCreated({ id: nextId, address, latitude: lat, longitude: lng, status });
     toast.success('Poste cadastrado!', { description: `${nextId} — ${address}` });
     resetForm();
     onOpenChange(false);
@@ -105,7 +97,6 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
 
   const resetForm = () => {
     setAddress('');
-    setNeighborhood('Não identificado');
     setLatitude('');
     setLongitude('');
     setStatus('FUNCIONANDO');
@@ -159,8 +150,7 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
                     <Popup>
                       <div className="text-xs">
                         <strong>Poste #{pole.id}</strong>
-                        <p className="text-gray-600">{pole.address}</p>
-                        <p className="text-gray-500">{pole.neighborhood}</p>
+                        <p className="text-muted-foreground">{pole.address}</p>
                         <Badge className={`mt-1 text-[10px] ${pole.status === 'FUNCIONANDO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {pole.status === 'FUNCIONANDO' ? 'Funcionando' : 'Queimado'}
                         </Badge>

@@ -229,7 +229,7 @@ export function PoleHistoryDrawer({ pole, open, onOpenChange }: PoleHistoryDrawe
                 </SheetTitle>
                 <div className="flex items-center gap-2 text-white/80 text-sm">
                   <MapPin className="h-3.5 w-3.5" />
-                  {pole.address} — {pole.neighborhood}
+                  {pole.address}
                 </div>
               </SheetHeader>
               <div className="mt-3">
