@@ -59,10 +59,34 @@ export function CreatePoleModal({ open, onOpenChange, onCreated, nextId, existin
   const [status, setStatus] = useState<PoleStatus>('FUNCIONANDO');
   const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
 
-  const handleLocationSelect = (lat: number, lng: number) => {
+  const handleLocationSelect = async (lat: number, lng: number) => {
     setLatitude(lat.toFixed(6));
     setLongitude(lng.toFixed(6));
     setMarkerPos([lat, lng]);
+
+    // Reverse geocoding
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`);
+      const data = await res.json();
+      if (data?.address) {
+        const road = data.address.road || data.address.pedestrian || '';
+        const houseNumber = data.address.house_number || '';
+        const fullAddress = houseNumber ? `${road}, ${houseNumber}` : road;
+        if (fullAddress) setAddress(fullAddress);
+
+        const suburb = data.address.suburb || data.address.neighbourhood || data.address.village || '';
+        const matchedNeighborhood = NEIGHBORHOODS.find(n => 
+          suburb.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(suburb.toLowerCase())
+        );
+        if (matchedNeighborhood) {
+          setNeighborhood(matchedNeighborhood);
+        } else if (suburb) {
+          setAddress(prev => prev || suburb);
+        }
+      }
+    } catch {
+      // Silently fail - user can fill manually
+    }
   };
 
   const handleSubmit = () => {
