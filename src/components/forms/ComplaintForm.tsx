@@ -149,18 +149,30 @@ export function ComplaintForm() {
 
   if (isSubmitted) {
     return (
-      <div className="text-center py-12 space-y-4 animate-fade-in">
+      <div className="text-center py-16 space-y-6 animate-fade-in">
         <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle className="h-8 w-8 text-success" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mx-auto">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-200 to-emerald-200 dark:from-green-800/40 dark:to-emerald-800/40">
+              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+            </div>
           </div>
         </div>
-        <h3 className="text-xl font-semibold">Denúncia Enviada!</h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Sua denúncia para o poste <strong>{selectedPole?.id}</strong> foi registrada com sucesso.
-          Nossa equipe irá analisar e tomar as providências necessárias.
-        </p>
-        <Button onClick={handleReset} variant="outline">
+        <div className="space-y-3">
+          <h3 className="text-2xl font-bold">Denúncia Registrada com Sucesso!</h3>
+          <p className="text-muted-foreground max-w-md mx-auto text-base leading-relaxed">
+            Sua denúncia para o poste <strong className="text-foreground">{selectedPole?.id}</strong>
+            {selectedPole?.address && <> na <strong className="text-foreground">{selectedPole.address}</strong></>}
+            {' '}foi registrada com sucesso. Nossa equipe irá analisar e tomar as providências necessárias.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Agradecemos por ajudar a manter nossa cidade mais segura e iluminada!
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Heart className="h-4 w-4 text-red-400 animate-pulse" />
+          <span>Obrigado por contribuir com a comunidade</span>
+        </div>
+        <Button onClick={handleReset} variant="outline" size="lg" className="mt-2">
           Fazer Nova Denúncia
         </Button>
       </div>
