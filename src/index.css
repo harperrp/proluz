@@ -200,6 +200,10 @@
 }
 
 /* Ensure Radix overlays appear above Leaflet map layers */
+[data-radix-portal] {
+  z-index: 1100 !important;
+}
+
 [data-radix-portal] [data-state] {
   z-index: 1100 !important;
 }
