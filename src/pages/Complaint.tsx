@@ -6,8 +6,8 @@ import { AlertTriangle, Shield, Clock, CheckCircle } from 'lucide-react';
 const steps = [
   {
     icon: <AlertTriangle className="h-5 w-5" />,
-    title: 'Identifique o problema',
-    description: 'Localize o poste com defeito e tire uma foto se possível.',
+    title: 'Selecione o poste',
+    description: 'Escolha sua cidade e clique no poste com problema no mapa.',
   },
   {
     icon: <Shield className="h-5 w-5" />,
@@ -68,7 +68,7 @@ export default function Complaint() {
 
         {/* Form */}
         <section className="py-12 lg:py-16">
-          <div className="container max-w-2xl">
+          <div className="container max-w-3xl">
             <div className="rounded-xl border bg-card p-6 lg:p-8 shadow-lg">
               <h2 className="text-xl font-semibold mb-6">Formulário de Denúncia</h2>
               <ComplaintForm />
