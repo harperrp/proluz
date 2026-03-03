@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Send, Loader2, CheckCircle, AlertCircle, AlertTriangle, MapPin } from 'lucide-react';
+import { Send, Loader2, CheckCircle, AlertCircle, AlertTriangle, MapPin, Heart, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -64,6 +71,7 @@ export function ComplaintForm() {
   const [selectedPole, setSelectedPole] = useState<Pole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showBurnedDialog, setShowBurnedDialog] = useState(false);
 
   const {
     register,
@@ -341,10 +349,11 @@ export function ComplaintForm() {
       </div>
 
       <Button
-        type="submit"
+        type={isPoleAlreadyBurned ? 'button' : 'submit'}
         size="lg"
         className="w-full"
-        disabled={isSubmitting || !selectedPole || isPoleAlreadyBurned}
+        disabled={isSubmitting || !selectedPole}
+        onClick={isPoleAlreadyBurned ? () => setShowBurnedDialog(true) : undefined}
       >
         {isSubmitting ? (
           <>
@@ -358,6 +367,37 @@ export function ComplaintForm() {
           </>
         )}
       </Button>
+
+      {/* Dialog for already-burned pole */}
+      <Dialog open={showBurnedDialog} onOpenChange={setShowBurnedDialog}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader className="items-center space-y-4">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 mx-auto">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-orange-200 dark:from-amber-800/40 dark:to-orange-800/40">
+                <ThumbsUp className="h-7 w-7 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
+            <DialogTitle className="text-xl">Obrigado pela sua atenção!</DialogTitle>
+            <DialogDescription className="text-base leading-relaxed space-y-3">
+              <p>
+                O poste <strong className="text-foreground">{selectedPole?.id}</strong>
+                {selectedPole?.address && <> na <strong className="text-foreground">{selectedPole.address}</strong></>}
+                {' '}já foi identificado com problemas e o reparo já está sendo providenciado pela equipe responsável.
+              </p>
+              <p>
+                Sua preocupação faz a diferença! Cidadãos como você ajudam a manter nossa cidade mais segura e iluminada.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2 pt-2 text-sm text-muted-foreground">
+            <Heart className="h-4 w-4 text-red-400 animate-pulse" />
+            <span>Obrigado por contribuir com a comunidade</span>
+          </div>
+          <Button onClick={() => setShowBurnedDialog(false)} className="w-full mt-2">
+            Entendi, obrigado!
+          </Button>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
