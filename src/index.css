@@ -199,11 +199,36 @@
   }
 }
 
-/* Ensure Radix overlays appear above Leaflet map layers */
+/* Constrain Leaflet map layers below sidebar/header */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 2 !important;
+}
+
+/* Ensure Radix overlays appear above everything */
 [data-radix-portal] {
   z-index: 1100 !important;
 }
 
 [data-radix-portal] [data-state] {
   z-index: 1100 !important;
+}
+
+/* Fullscreen map mode */
+.map-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 45 !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  border-radius: 0 !important;
+  border: none !important;
 }

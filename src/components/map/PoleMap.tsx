@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
-import { AlertTriangle, CheckCircle2, Eye, Lightbulb } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, Lightbulb, Maximize2, Minimize2 } from 'lucide-react';
 import { Pole, PoleStatus } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { getPoleStats, getRecurrenceLevel, formatDateBR, daysSince } from '@/data/mockData';
 import { PoleHistoryDrawer } from '@/components/poles/PoleHistoryDrawer';
+import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -79,7 +80,9 @@ export function PoleMap({
   const [selectedPole, setSelectedPole] = useState<Pole | null>(null);
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   const openHistory = (pole: Pole) => {
     // Close any open Leaflet popup first to avoid DOM conflicts with Radix Dialog
@@ -101,6 +104,14 @@ export function PoleMap({
       }
     }
   }, [poles, selectedPole]);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev);
+    // Invalidate map size after transition
+    setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 300);
+  }, []);
 
   const filteredPoles = internalPoles.filter((pole) => filter === 'TODOS' || pole.status === filter);
   const workingCount = internalPoles.filter((pole) => pole.status === 'FUNCIONANDO').length;
@@ -172,7 +183,14 @@ export function PoleMap({
         </div>
       )}
 
-      <div className="relative rounded-xl border overflow-hidden" style={{ height: '500px' }}>
+      <div
+        ref={mapContainerRef}
+        className={cn(
+          'relative rounded-xl border overflow-hidden transition-all duration-300',
+          isFullscreen ? 'map-fullscreen' : ''
+        )}
+        style={isFullscreen ? undefined : { height: '500px' }}
+      >
         <MapContainer center={VARGEM_GRANDE_CENTER} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom ref={mapRef}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -215,7 +233,7 @@ export function PoleMap({
                           <button
                             onClick={() => updatePoleStatus(pole.id, 'FUNCIONANDO')}
                             className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                              pole.status === 'QUEIMADO' ? 'bg-green-600 text-white' : 'border bg-transparent text-gray-600'
+                              pole.status === 'QUEIMADO' ? 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]' : 'border bg-transparent text-muted-foreground'
                             }`}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" /> Consertado
@@ -223,7 +241,7 @@ export function PoleMap({
                           <button
                             onClick={() => updatePoleStatus(pole.id, 'QUEIMADO')}
                             className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                              pole.status !== 'QUEIMADO' ? 'bg-red-600 text-white' : 'border bg-transparent text-gray-600'
+                              pole.status !== 'QUEIMADO' ? 'bg-destructive text-destructive-foreground' : 'border bg-transparent text-muted-foreground'
                             }`}
                           >
                             <AlertTriangle className="h-3.5 w-3.5" /> Queimado
@@ -238,7 +256,25 @@ export function PoleMap({
           })}
         </MapContainer>
 
-        <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-[1000]">
+        {/* Fullscreen toggle button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={toggleFullscreen}
+                className="absolute top-3 right-3 z-[10] flex h-9 w-9 items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm border shadow-lg hover:bg-accent transition-colors"
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <div className={cn(
+          "absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-[10]",
+          isFullscreen && "bottom-6 left-6"
+        )}>
           <p className="text-xs font-medium mb-2">Legenda</p>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs">
