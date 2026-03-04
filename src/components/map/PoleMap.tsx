@@ -260,10 +260,10 @@ export function PoleMap({
         <button
           onClick={toggleFullscreen}
           className={cn(
-            "flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm border shadow-xl hover:bg-accent transition-all duration-200",
+            "flex items-center justify-center rounded-lg border shadow-xl hover:bg-accent transition-all duration-200",
             isFullscreen
-              ? "fixed top-4 right-4 z-[60] h-11 gap-2 px-5 py-2.5 shadow-2xl"
-              : "absolute top-3 right-3 z-[10] h-9 w-9"
+              ? "fixed z-[9999] h-11 gap-2 px-5 py-2.5 shadow-2xl bg-card border-border top-[76px] right-4 lg:top-4 lg:right-4"
+              : "absolute top-3 right-3 z-[10] h-9 w-9 bg-card/95 backdrop-blur-sm"
           )}
         >
           {isFullscreen ? (

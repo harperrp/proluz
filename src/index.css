@@ -226,7 +226,7 @@
 .map-fullscreen {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 45 !important;
+  z-index: 9998 !important;
   height: 100vh !important;
   width: 100vw !important;
   border-radius: 0 !important;
