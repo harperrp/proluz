@@ -257,19 +257,25 @@ export function PoleMap({
         </MapContainer>
 
         {/* Fullscreen toggle button */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleFullscreen}
-                className="absolute top-3 right-3 z-[10] flex h-9 w-9 items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm border shadow-lg hover:bg-accent transition-colors"
-              >
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {/* Fullscreen toggle */}
+        <button
+          onClick={toggleFullscreen}
+          className={cn(
+            "absolute top-3 right-3 z-[10] flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm border shadow-lg hover:bg-accent transition-all duration-200",
+            isFullscreen
+              ? "h-10 gap-2 px-4 py-2 top-4 right-4"
+              : "h-9 w-9"
+          )}
+        >
+          {isFullscreen ? (
+            <>
+              <Minimize2 className="h-4 w-4" />
+              <span className="text-sm font-medium">Sair da tela cheia</span>
+            </>
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
+        </button>
 
         <div className={cn(
           "absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-[10]",
