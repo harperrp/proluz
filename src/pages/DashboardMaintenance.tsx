@@ -218,10 +218,17 @@ export default function DashboardMaintenance() {
             <h1 className="text-2xl lg:text-3xl font-bold">Manutenção</h1>
             <p className="text-muted-foreground">Vargem Grande do Rio Pardo: técnicos encontram o poste exato no mapa e atualizam de queimado para consertado no local.</p>
           </div>
-          <Button onClick={startSuggestedRoute} className="w-full md:w-auto">
-            <Route className="h-4 w-4 mr-2" />
-            Iniciar Rota Otimizada
-          </Button>
+          {activeRoute ? (
+            <Button onClick={cancelRoute} variant="destructive" className="w-full md:w-auto">
+              <X className="h-4 w-4 mr-2" />
+              Cancelar Rota
+            </Button>
+          ) : (
+            <Button onClick={startSuggestedRoute} className="w-full md:w-auto">
+              <Route className="h-4 w-4 mr-2" />
+              Iniciar Rota Otimizada
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-4">
