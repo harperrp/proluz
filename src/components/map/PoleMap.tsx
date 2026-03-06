@@ -274,6 +274,7 @@ export function PoleMap({
                 </Popup>
               </Marker>
             );
+          })}
           {/* Route polyline and numbered markers */}
           {route && route.length > 0 && (
             <>
