@@ -303,8 +303,7 @@ export function PoleMap({
               <FitRoute route={route} />
             </>
           )}
-          </MapContainer>
-
+        </MapContainer>
 
         {/* Fullscreen toggle */}
         <button
