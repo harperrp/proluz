@@ -325,6 +325,20 @@ export function PoleMap({
           )}
         </button>
 
+        {/* Cancel route button */}
+        {route && route.length > 0 && onCancelRoute && (
+          <button
+            onClick={onCancelRoute}
+            className={cn(
+              "absolute z-[10] flex items-center gap-2 rounded-lg bg-destructive text-destructive-foreground px-4 py-2.5 shadow-xl hover:bg-destructive/90 transition-all duration-200 text-sm font-medium",
+              isFullscreen ? "fixed z-[9999] top-[76px] left-4 lg:top-4 lg:left-4" : "top-3 left-3"
+            )}
+          >
+            <Minimize2 className="h-4 w-4" />
+            Cancelar Rota
+          </button>
+        )}
+
         <div className={cn(
           "absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-[10]",
           isFullscreen && "bottom-6 left-6"
