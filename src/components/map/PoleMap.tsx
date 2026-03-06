@@ -93,6 +93,8 @@ export function PoleMap({
   onStatusChange,
   defaultFilter = 'TODOS',
   poleInsights,
+  route,
+  onCancelRoute,
 }: PoleMapProps) {
   const [internalPoles, setInternalPoles] = useState<Pole[]>(poles ?? MOCK_POLES);
   const [filter, setFilter] = useState<PoleStatus | 'TODOS'>(defaultFilter);
