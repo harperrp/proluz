@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { AlertTriangle, CheckCircle2, Eye, Lightbulb, Maximize2, Minimize2 } from 'lucide-react';
 import { Pole, PoleStatus } from '@/types';
@@ -54,6 +54,12 @@ interface PoleInsight {
   failuresLast30Days: number;
 }
 
+export interface RoutePoint {
+  latitude: number;
+  longitude: number;
+  label: string;
+}
+
 interface PoleMapProps {
   showFilters?: boolean;
   onPoleSelect?: (pole: Pole) => void;
@@ -63,6 +69,19 @@ interface PoleMapProps {
   onStatusChange?: (poleId: string, newStatus: PoleStatus) => void;
   defaultFilter?: PoleStatus | 'TODOS';
   poleInsights?: Record<string, PoleInsight>;
+  route?: RoutePoint[];
+  onCancelRoute?: () => void;
+}
+
+function FitRoute({ route }: { route: RoutePoint[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (route.length > 0) {
+      const bounds = L.latLngBounds(route.map(r => [r.latitude, r.longitude]));
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+  }, [route, map]);
+  return null;
 }
 
 export function PoleMap({
@@ -74,6 +93,8 @@ export function PoleMap({
   onStatusChange,
   defaultFilter = 'TODOS',
   poleInsights,
+  route,
+  onCancelRoute,
 }: PoleMapProps) {
   const [internalPoles, setInternalPoles] = useState<Pole[]>(poles ?? MOCK_POLES);
   const [filter, setFilter] = useState<PoleStatus | 'TODOS'>(defaultFilter);
@@ -254,6 +275,35 @@ export function PoleMap({
               </Marker>
             );
           })}
+          {/* Route polyline and numbered markers */}
+          {route && route.length > 0 && (
+            <>
+              <Polyline
+                positions={route.map(r => [r.latitude, r.longitude] as [number, number])}
+                pathOptions={{ color: 'hsl(var(--primary))', weight: 4, opacity: 0.8, dashArray: '10, 6' }}
+              />
+              {route.map((point, idx) => (
+                <Marker
+                  key={`route-${idx}`}
+                  position={[point.latitude, point.longitude]}
+                  icon={L.divIcon({
+                    html: `<div style="background:hsl(217,91%,60%);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${idx + 1}</div>`,
+                    className: 'route-number-marker',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                  })}
+                >
+                  <Popup>
+                    <div className="p-1 text-sm">
+                      <strong>Parada {idx + 1}</strong>
+                      <p>{point.label}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+              <FitRoute route={route} />
+            </>
+          )}
         </MapContainer>
 
         {/* Fullscreen toggle */}
@@ -275,6 +325,20 @@ export function PoleMap({
             <Maximize2 className="h-4 w-4" />
           )}
         </button>
+
+        {/* Cancel route button */}
+        {route && route.length > 0 && onCancelRoute && (
+          <button
+            onClick={onCancelRoute}
+            className={cn(
+              "absolute z-[10] flex items-center gap-2 rounded-lg bg-destructive text-destructive-foreground px-4 py-2.5 shadow-xl hover:bg-destructive/90 transition-all duration-200 text-sm font-medium",
+              isFullscreen ? "fixed z-[9999] top-[76px] left-4 lg:top-4 lg:left-4" : "top-3 left-3"
+            )}
+          >
+            <Minimize2 className="h-4 w-4" />
+            Cancelar Rota
+          </button>
+        )}
 
         <div className={cn(
           "absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-[10]",

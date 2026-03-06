@@ -3,9 +3,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PoleMap } from '@/components/map/PoleMap';
+import { PoleMap, RoutePoint } from '@/components/map/PoleMap';
 import { Pole, PoleStatus } from '@/types';
-import { Wrench, MapPin, CheckCircle, Clock, AlertTriangle, Route, Navigation } from 'lucide-react';
+import { Wrench, MapPin, CheckCircle, Clock, AlertTriangle, Route, Navigation, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -130,6 +130,7 @@ export default function DashboardMaintenance() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [observations, setObservations] = useState('');
   const [currentPosition, setCurrentPosition] = useState({ latitude: -15.3983, longitude: -42.3097 });
+  const [activeRoute, setActiveRoute] = useState<RoutePoint[] | undefined>(undefined);
 
   const criticalAlerts = useMemo(
     () => Object.entries(failureStats).filter(([, stats]) => stats.failuresTotal >= 5 || stats.failuresLast30Days >= 2).length,
@@ -184,32 +185,21 @@ export default function DashboardMaintenance() {
       return;
     }
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const start = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
+    const routePoints: RoutePoint[] = suggestedRoute.map((item) => ({
+      latitude: item.latitude,
+      longitude: item.longitude,
+      label: `${item.poleId} — ${item.address}`,
+    }));
 
-          setCurrentPosition(start);
+    setActiveRoute(routePoints);
+    toast.success('Rota otimizada ativada no mapa', {
+      description: `${routePoints.length} paradas traçadas por proximidade.`,
+    });
+  };
 
-          const waypoints = buildRoute(items, start).map((item) => `${item.latitude},${item.longitude}`).join('/');
-          window.open(`https://www.google.com/maps/dir/${start.latitude},${start.longitude}/${waypoints}`, '_blank', 'noopener,noreferrer');
-
-          toast.success('Rota iniciada com sua localização atual', {
-            description: `Atendimento sugerido para ${items.length} postes queimados.`,
-          });
-        },
-        () => {
-          const waypoints = suggestedRoute.map((item) => `${item.latitude},${item.longitude}`).join('/');
-          window.open(`https://www.google.com/maps/dir/${waypoints}`, '_blank', 'noopener,noreferrer');
-          toast.warning('Não foi possível obter GPS atual', {
-            description: 'Rota iniciada com ponto inicial padrão de Vargem Grande do Rio Pardo.',
-          });
-        },
-      );
-    }
+  const cancelRoute = () => {
+    setActiveRoute(undefined);
+    toast.info('Rota cancelada.');
   };
 
   const handleMapStatusChange = (poleId: string, newStatus: PoleStatus) => {
@@ -228,10 +218,17 @@ export default function DashboardMaintenance() {
             <h1 className="text-2xl lg:text-3xl font-bold">Manutenção</h1>
             <p className="text-muted-foreground">Vargem Grande do Rio Pardo: técnicos encontram o poste exato no mapa e atualizam de queimado para consertado no local.</p>
           </div>
-          <Button onClick={startSuggestedRoute} className="w-full md:w-auto">
-            <Route className="h-4 w-4 mr-2" />
-            Iniciar Rota Otimizada
-          </Button>
+          {activeRoute ? (
+            <Button onClick={cancelRoute} variant="destructive" className="w-full md:w-auto">
+              <X className="h-4 w-4 mr-2" />
+              Cancelar Rota
+            </Button>
+          ) : (
+            <Button onClick={startSuggestedRoute} className="w-full md:w-auto">
+              <Route className="h-4 w-4 mr-2" />
+              Iniciar Rota Otimizada
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-4">
@@ -299,6 +296,8 @@ export default function DashboardMaintenance() {
               defaultFilter="QUEIMADO"
               onStatusChange={handleMapStatusChange}
               poleInsights={failureStats}
+              route={activeRoute}
+              onCancelRoute={cancelRoute}
             />
           </CardContent>
         </Card>
