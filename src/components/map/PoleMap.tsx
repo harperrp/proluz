@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { AlertTriangle, CheckCircle2, Eye, Lightbulb, Maximize2, Minimize2 } from 'lucide-react';
 import { Pole, PoleStatus } from '@/types';
@@ -54,6 +54,12 @@ interface PoleInsight {
   failuresLast30Days: number;
 }
 
+export interface RoutePoint {
+  latitude: number;
+  longitude: number;
+  label: string;
+}
+
 interface PoleMapProps {
   showFilters?: boolean;
   onPoleSelect?: (pole: Pole) => void;
@@ -63,6 +69,19 @@ interface PoleMapProps {
   onStatusChange?: (poleId: string, newStatus: PoleStatus) => void;
   defaultFilter?: PoleStatus | 'TODOS';
   poleInsights?: Record<string, PoleInsight>;
+  route?: RoutePoint[];
+  onCancelRoute?: () => void;
+}
+
+function FitRoute({ route }: { route: RoutePoint[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (route.length > 0) {
+      const bounds = L.latLngBounds(route.map(r => [r.latitude, r.longitude]));
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+  }, [route, map]);
+  return null;
 }
 
 export function PoleMap({
