@@ -135,6 +135,7 @@ export function PoleMap({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const roadGeometry = useRoadRoute(route);
 
   const openHistory = (pole: Pole) => {
     // Close any open Leaflet popup first to avoid DOM conflicts with Radix Dialog
