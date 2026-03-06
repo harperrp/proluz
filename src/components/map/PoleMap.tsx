@@ -310,7 +310,7 @@ export function PoleMap({
           {route && route.length > 0 && (
             <>
               <Polyline
-                positions={route.map(r => [r.latitude, r.longitude] as [number, number])}
+                positions={roadGeometry.length > 0 ? roadGeometry : route.map(r => [r.latitude, r.longitude] as [number, number])}
                 pathOptions={{ color: 'hsl(var(--primary))', weight: 4, opacity: 0.8, dashArray: '10, 6' }}
               />
               {route.map((point, idx) => (
