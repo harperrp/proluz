@@ -296,6 +296,8 @@ export default function DashboardMaintenance() {
               defaultFilter="QUEIMADO"
               onStatusChange={handleMapStatusChange}
               poleInsights={failureStats}
+              route={activeRoute}
+              onCancelRoute={cancelRoute}
             />
           </CardContent>
         </Card>
