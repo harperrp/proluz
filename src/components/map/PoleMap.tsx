@@ -274,8 +274,37 @@ export function PoleMap({
                 </Popup>
               </Marker>
             );
-          })}
-        </MapContainer>
+          {/* Route polyline and numbered markers */}
+          {route && route.length > 0 && (
+            <>
+              <Polyline
+                positions={route.map(r => [r.latitude, r.longitude] as [number, number])}
+                pathOptions={{ color: 'hsl(var(--primary))', weight: 4, opacity: 0.8, dashArray: '10, 6' }}
+              />
+              {route.map((point, idx) => (
+                <Marker
+                  key={`route-${idx}`}
+                  position={[point.latitude, point.longitude]}
+                  icon={L.divIcon({
+                    html: `<div style="background:hsl(217,91%,60%);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${idx + 1}</div>`,
+                    className: 'route-number-marker',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                  })}
+                >
+                  <Popup>
+                    <div className="p-1 text-sm">
+                      <strong>Parada {idx + 1}</strong>
+                      <p>{point.label}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+              <FitRoute route={route} />
+            </>
+          )}
+          </MapContainer>
+
 
         {/* Fullscreen toggle */}
         <button
