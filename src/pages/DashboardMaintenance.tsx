@@ -3,9 +3,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PoleMap } from '@/components/map/PoleMap';
+import { PoleMap, RoutePoint } from '@/components/map/PoleMap';
 import { Pole, PoleStatus } from '@/types';
-import { Wrench, MapPin, CheckCircle, Clock, AlertTriangle, Route, Navigation } from 'lucide-react';
+import { Wrench, MapPin, CheckCircle, Clock, AlertTriangle, Route, Navigation, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -130,6 +130,7 @@ export default function DashboardMaintenance() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [observations, setObservations] = useState('');
   const [currentPosition, setCurrentPosition] = useState({ latitude: -15.3983, longitude: -42.3097 });
+  const [activeRoute, setActiveRoute] = useState<RoutePoint[] | undefined>(undefined);
 
   const criticalAlerts = useMemo(
     () => Object.entries(failureStats).filter(([, stats]) => stats.failuresTotal >= 5 || stats.failuresLast30Days >= 2).length,
