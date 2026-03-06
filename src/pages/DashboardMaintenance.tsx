@@ -185,32 +185,21 @@ export default function DashboardMaintenance() {
       return;
     }
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const start = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
+    const routePoints: RoutePoint[] = suggestedRoute.map((item) => ({
+      latitude: item.latitude,
+      longitude: item.longitude,
+      label: `${item.poleId} — ${item.address}`,
+    }));
 
-          setCurrentPosition(start);
+    setActiveRoute(routePoints);
+    toast.success('Rota otimizada ativada no mapa', {
+      description: `${routePoints.length} paradas traçadas por proximidade.`,
+    });
+  };
 
-          const waypoints = buildRoute(items, start).map((item) => `${item.latitude},${item.longitude}`).join('/');
-          window.open(`https://www.google.com/maps/dir/${start.latitude},${start.longitude}/${waypoints}`, '_blank', 'noopener,noreferrer');
-
-          toast.success('Rota iniciada com sua localização atual', {
-            description: `Atendimento sugerido para ${items.length} postes queimados.`,
-          });
-        },
-        () => {
-          const waypoints = suggestedRoute.map((item) => `${item.latitude},${item.longitude}`).join('/');
-          window.open(`https://www.google.com/maps/dir/${waypoints}`, '_blank', 'noopener,noreferrer');
-          toast.warning('Não foi possível obter GPS atual', {
-            description: 'Rota iniciada com ponto inicial padrão de Vargem Grande do Rio Pardo.',
-          });
-        },
-      );
-    }
+  const cancelRoute = () => {
+    setActiveRoute(undefined);
+    toast.info('Rota cancelada.');
   };
 
   const handleMapStatusChange = (poleId: string, newStatus: PoleStatus) => {
