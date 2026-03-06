@@ -84,6 +84,37 @@ function FitRoute({ route }: { route: RoutePoint[] }) {
   return null;
 }
 
+function useRoadRoute(route?: RoutePoint[]) {
+  const [roadGeometry, setRoadGeometry] = useState<[number, number][]>([]);
+
+  useEffect(() => {
+    if (!route || route.length < 2) {
+      setRoadGeometry([]);
+      return;
+    }
+
+    const coords = route.map(r => `${r.longitude},${r.latitude}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.routes?.[0]?.geometry?.coordinates) {
+          const positions = data.routes[0].geometry.coordinates.map(
+            (c: [number, number]) => [c[1], c[0]] as [number, number]
+          );
+          setRoadGeometry(positions);
+        }
+      })
+      .catch(() => {
+        // Fallback to straight lines if OSRM fails
+        setRoadGeometry(route.map(r => [r.latitude, r.longitude] as [number, number]));
+      });
+  }, [route]);
+
+  return roadGeometry;
+}
+
 export function PoleMap({
   showFilters = true,
   onPoleSelect,
@@ -104,6 +135,7 @@ export function PoleMap({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const roadGeometry = useRoadRoute(route);
 
   const openHistory = (pole: Pole) => {
     // Close any open Leaflet popup first to avoid DOM conflicts with Radix Dialog
@@ -279,7 +311,7 @@ export function PoleMap({
           {route && route.length > 0 && (
             <>
               <Polyline
-                positions={route.map(r => [r.latitude, r.longitude] as [number, number])}
+                positions={roadGeometry.length > 0 ? roadGeometry : route.map(r => [r.latitude, r.longitude] as [number, number])}
                 pathOptions={{ color: 'hsl(var(--primary))', weight: 4, opacity: 0.8, dashArray: '10, 6' }}
               />
               {route.map((point, idx) => (
