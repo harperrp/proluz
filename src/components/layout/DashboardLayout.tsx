@@ -44,10 +44,22 @@ const navItems: NavItem[] = [
     roles: ['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL'],
   },
   {
+    label: 'Prefeituras',
+    href: '/dashboard/prefeituras',
+    icon: <Building2 className="h-5 w-5" />,
+    roles: ['ADMIN'],
+  },
+  {
     label: 'Mapa de Postes',
     href: '/dashboard/mapa',
     icon: <MapPin className="h-5 w-5" />,
     roles: ['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL'],
+  },
+  {
+    label: 'Postes',
+    href: '/dashboard/postes',
+    icon: <Lightbulb className="h-5 w-5" />,
+    roles: ['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY'],
   },
   {
     label: 'Denúncias',
@@ -55,6 +67,12 @@ const navItems: NavItem[] = [
     icon: <AlertTriangle className="h-5 w-5" />,
     roles: ['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY'],
     badge: '12',
+  },
+  {
+    label: 'Manutenção',
+    href: '/dashboard/manutencao',
+    icon: <HardHat className="h-5 w-5" />,
+    roles: ['ADMIN', 'CITY_HALL_ADMIN', 'TECHNICAL'],
   },
   {
     label: 'Ordens de Serviço',
@@ -66,6 +84,12 @@ const navItems: NavItem[] = [
     label: 'Equipes',
     href: '/dashboard/equipes',
     icon: <Users className="h-5 w-5" />,
+    roles: ['ADMIN', 'CITY_HALL_ADMIN'],
+  },
+  {
+    label: 'Usuários',
+    href: '/dashboard/usuarios',
+    icon: <UserCog className="h-5 w-5" />,
     roles: ['ADMIN', 'CITY_HALL_ADMIN'],
   },
   {
