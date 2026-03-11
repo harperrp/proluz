@@ -58,13 +58,13 @@ export default function Index() {
       {/* Navbar */}
       <header className="fixed top-0 w-full z-50 border-b border-border/30 bg-background/80 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-4 w-4 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
+              <Cpu className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-bold text-sm">IluminaCity</span>
-              <span className="text-[10px] text-muted-foreground block leading-tight">by RAD Tecnologia</span>
+              <span className="font-bold text-sm block leading-tight">RAD TECNOLOGIA</span>
+              <span className="text-[10px] text-muted-foreground tracking-wider uppercase">Plataforma GovTech</span>
             </div>
           </Link>
           <div className="flex items-center gap-3">
