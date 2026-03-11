@@ -15,9 +15,6 @@ import DashboardPoles from "./pages/DashboardPoles";
 import DashboardUsers from "./pages/DashboardUsers";
 import DashboardCityHalls from "./pages/DashboardCityHalls";
 import DashboardReports from "./pages/DashboardReports";
-import DashboardServiceOrders from "./pages/DashboardServiceOrders";
-import DashboardTeams from "./pages/DashboardTeams";
-import DashboardSettings from "./pages/DashboardSettings";
 import NotFound from "./pages/NotFound";
 import { ReactNode } from "react";
 
@@ -49,9 +46,6 @@ function AppRoutes() {
       <Route path="/dashboard/usuarios" element={<ProtectedRoute><DashboardUsers /></ProtectedRoute>} />
       <Route path="/dashboard/prefeituras" element={<ProtectedRoute><DashboardCityHalls /></ProtectedRoute>} />
       <Route path="/dashboard/relatorios" element={<ProtectedRoute><DashboardReports /></ProtectedRoute>} />
-      <Route path="/dashboard/ordens" element={<ProtectedRoute><DashboardServiceOrders /></ProtectedRoute>} />
-      <Route path="/dashboard/equipes" element={<ProtectedRoute><DashboardTeams /></ProtectedRoute>} />
-      <Route path="/dashboard/configuracoes" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

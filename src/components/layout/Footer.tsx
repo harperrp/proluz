@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Cpu, Mail, Phone, MapPin, Linkedin, Instagram, Cloud } from 'lucide-react';
+import { Lightbulb, Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -8,25 +8,16 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
-                <Cpu className="h-5 w-5 text-primary-foreground" />
+            <Link to="/" className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                <Lightbulb className="h-5 w-5 text-primary-foreground" />
               </div>
-              <div>
-                <span className="text-sm font-bold block leading-tight">RAD TECNOLOGIA</span>
-                <span className="text-[10px] text-muted-foreground tracking-wider uppercase">Plataforma GovTech</span>
-              </div>
+              <span className="text-lg font-semibold">IluminaCity</span>
             </Link>
-            <div className="pl-0.5">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
-                <span className="text-xs font-semibold text-accent">IluminaCity</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Sistema de gestão inteligente de iluminação pública municipal. 
-                Módulo integrante da Plataforma RAD Tecnologia.
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Sistema completo de Gestão de Iluminação Pública Municipal. 
+              Transformando a forma como prefeituras cuidam da iluminação das cidades.
+            </p>
             <div className="flex gap-3">
               <a 
                 href="#" 
@@ -105,8 +96,8 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:contato@radtecnologia.com.br" className="hover:text-foreground transition-colors">
-                  contato@radtecnologia.com.br
+                <a href="mailto:contato@iluminacity.com.br" className="hover:text-foreground transition-colors">
+                  contato@iluminacity.com.br
                 </a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
@@ -127,12 +118,9 @@ export function Footer() {
         </div>
 
         <div className="border-t mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-muted-foreground text-center md:text-left space-y-0.5">
-            <p>IluminaCity © {new Date().getFullYear()} · Sistema integrante da plataforma <strong className="text-foreground/70">RAD Tecnologia</strong></p>
-            <p className="text-xs text-muted-foreground/60 flex items-center gap-1 justify-center md:justify-start">
-              <Cloud className="h-3 w-3" /> Infraestrutura em nuvem AWS
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © {new Date().getFullYear()} IluminaCity. Todos os direitos reservados.
+          </p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
               Termos de Uso

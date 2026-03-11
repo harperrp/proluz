@@ -3,13 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Eye, EyeOff, ArrowRight, CheckCircle, Globe, Shield, Cpu } from 'lucide-react';
+import { Lightbulb, Loader2, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -19,10 +18,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const demoAccounts = [
-  { email: 'admin@sistema.gov.br', password: 'admin123', role: 'Administrador', description: 'Acesso total', color: 'from-primary/20 to-primary/5 border-primary/20 text-primary' },
-  { email: 'prefeitura@cidade.gov.br', password: 'prefeitura123', role: 'Admin. Municipal', description: 'Gestão municipal', color: 'from-primary/20 to-primary/5 border-primary/20 text-primary' },
-  { email: 'secretario@cidade.gov.br', password: 'secretario123', role: 'Secretário', description: 'Validar denúncias', color: 'from-accent/20 to-accent/5 border-accent/20 text-accent' },
-  { email: 'tecnico@cidade.gov.br', password: 'tecnico123', role: 'Técnico', description: 'Manutenção', color: 'from-success/20 to-success/5 border-success/20 text-success' },
+  { email: 'admin@sistema.gov.br', password: 'admin123', role: 'Administrador Geral', description: 'Acesso total ao sistema', color: 'bg-primary' },
+  { email: 'prefeitura@cidade.gov.br', password: 'prefeitura123', role: 'Admin. Prefeitura', description: 'Gestão municipal', color: 'bg-blue-600' },
+  { email: 'secretario@cidade.gov.br', password: 'secretario123', role: 'Secretário', description: 'Validar denúncias', color: 'bg-amber-600' },
+  { email: 'tecnico@cidade.gov.br', password: 'tecnico123', role: 'Técnico', description: 'Executa manutenções', color: 'bg-emerald-600' },
 ];
 
 export default function Login() {
@@ -43,14 +42,18 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    
     const success = await login(data.email, data.password);
+    
     setIsLoading(false);
     
     if (success) {
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } else {
-      toast.error('Credenciais inválidas');
+      toast.error('Credenciais inválidas', {
+        description: 'Verifique seu e-mail e senha.',
+      });
     }
   };
 
@@ -61,57 +64,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex gradient-hero">
+    <div className="min-h-screen flex">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md space-y-8"
-        >
-          {/* RAD Tecnologia Branding */}
-          <div className="text-center space-y-5">
-            <Link to="/" className="inline-block">
-              <div className="flex flex-col items-center gap-3">
-                {/* RAD Logo mark */}
-                <div className="relative">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 glow-blue shadow-lg shadow-primary/20">
-                    <Cpu className="h-7 w-7 text-primary-foreground" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-accent border-2 border-background" />
-                </div>
-                {/* Company name */}
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight">RAD TECNOLOGIA</h2>
-                  <p className="text-[11px] text-muted-foreground tracking-widest uppercase">Plataforma GovTech</p>
-                </div>
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-8 animate-fade-in">
+          <div className="text-center">
+            <Link to="/" className="inline-flex items-center gap-2 mb-8">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+                <Lightbulb className="h-6 w-6 text-primary-foreground" />
               </div>
+              <span className="text-xl font-bold">IluminaCity</span>
             </Link>
-
-            {/* System identifier */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-center gap-2">
-                <div className="h-px w-8 bg-border" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Módulo</span>
-                <div className="h-px w-8 bg-border" />
-              </div>
-              <h1 className="text-2xl font-bold">IluminaCity</h1>
-              <p className="text-sm text-muted-foreground">
-                Sistema de gestão inteligente de iluminação pública para cidades
-              </p>
-            </div>
+            
+            <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
+            <p className="text-muted-foreground mt-2">
+              Acesse o sistema de gestão de iluminação pública
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs">E-mail</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="seu@email.gov.br"
                 {...register('email')}
-                className={`bg-muted/30 border-border/50 ${errors.email ? 'border-destructive' : ''}`}
+                className={errors.email ? 'border-destructive' : ''}
               />
               {errors.email && (
                 <p className="text-xs text-destructive">{errors.email.message}</p>
@@ -119,14 +98,14 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs">Senha</Label>
+              <Label htmlFor="password">Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   {...register('password')}
-                  className={`bg-muted/30 border-border/50 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                  className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
                 />
                 <button
                   type="button"
@@ -158,11 +137,11 @@ export default function Login() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/50" />
+              <div className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">
-                Demonstração
+              <span className="bg-background px-2 text-muted-foreground">
+                Acesso Rápido para Demonstração
               </span>
             </div>
           </div>
@@ -173,97 +152,66 @@ export default function Login() {
                 key={account.email}
                 type="button"
                 onClick={() => handleDemoSelect(account)}
-                className={`relative text-left p-3 rounded-xl border transition-all duration-200 ${
+                className={`relative text-left p-3 rounded-lg border transition-all ${
                   selectedDemo === account.email 
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/50' 
-                    : 'border-border/50 bg-card/30 hover:border-primary/30'
+                    ? 'border-primary bg-primary/5 ring-1 ring-primary' 
+                    : 'bg-card hover:bg-muted/50 hover:border-primary/50'
                 }`}
               >
                 {selectedDemo === account.email && (
                   <CheckCircle className="absolute top-2 right-2 h-4 w-4 text-primary" />
                 )}
+                <div className={`w-2 h-2 rounded-full ${account.color} mb-2`} />
                 <p className="text-sm font-medium">{account.role}</p>
-                <p className="text-[11px] text-muted-foreground">{account.description}</p>
+                <p className="text-xs text-muted-foreground">{account.description}</p>
               </button>
             ))}
           </div>
 
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             É cidadão?{' '}
             <Link to="/denuncia" className="text-primary hover:underline font-medium">
               Faça uma denúncia
             </Link>
           </p>
-
-          {/* Institutional footer */}
-          <p className="text-center text-[10px] text-muted-foreground/50 pt-2">
-            IluminaCity © 2026 · Plataforma RAD Tecnologia · Infraestrutura em nuvem AWS
-          </p>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Right side - Visual */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-12 relative overflow-hidden border-l border-border/20">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+      {/* Right side - Decorative */}
+      <div className="hidden lg:flex flex-1 gradient-hero items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
         
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative max-w-lg text-center space-y-8"
-        >
-          {/* RAD logo large */}
-          <div className="space-y-4">
-            <div className="h-20 w-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 backdrop-blur-sm flex items-center justify-center glow-blue">
-              <Cpu className="h-10 w-10 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold tracking-widest uppercase text-muted-foreground">RAD Tecnologia</h2>
-              <p className="text-[11px] text-muted-foreground/60 tracking-wider uppercase">Plataforma GovTech</p>
-            </div>
+        <div className="relative max-w-lg text-primary-foreground text-center space-y-6">
+          <div className="h-20 w-20 mx-auto rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <Lightbulb className="h-10 w-10" />
           </div>
-          
-          <div>
-            <h2 className="text-3xl font-bold mb-4">
-              Gestão Municipal<br />
-              <span className="text-primary">Inteligente</span>
-            </h2>
-            <p className="text-muted-foreground max-w-sm mx-auto">
-              Plataforma integrada de soluções tecnológicas para prefeituras. 
-              Iluminação pública, gestão urbana e muito mais.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { icon: <Globe className="h-5 w-5 text-primary" />, value: '60%', label: 'Mais rápido' },
-              { icon: <Shield className="h-5 w-5 text-accent" />, value: '95%', label: 'Resolução' },
-              { icon: <Cpu className="h-5 w-5 text-success" />, value: '40%', label: 'Economia' },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.15 }}
-                className="p-4 rounded-xl bg-card/30 border border-border/30 backdrop-blur-sm"
-              >
-                <div className="flex justify-center mb-2">{stat.icon}</div>
-                <p className="text-2xl font-bold text-foreground font-mono">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="text-xs text-muted-foreground/60 space-x-4">
-            <span>✓ LGPD</span>
-            <span>✓ Multi-tenant</span>
-            <span>✓ Suporte 24/7</span>
-          </div>
-
-          <p className="text-[10px] text-muted-foreground/40">
-            Infraestrutura em nuvem AWS · Segurança de dados certificada
+          <h2 className="text-3xl font-bold">
+            Gestão Inteligente de Iluminação Pública
+          </h2>
+          <p className="text-lg text-white/80">
+            Transforme a forma como sua prefeitura gerencia a iluminação pública. 
+            Reduza custos, melhore o tempo de resposta e aumente a satisfação dos cidadãos.
           </p>
-        </motion.div>
+          
+          <div className="grid grid-cols-3 gap-4 pt-8">
+            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+              <p className="text-3xl font-bold">60%</p>
+              <p className="text-sm text-white/70">Mais rápido</p>
+            </div>
+            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+              <p className="text-3xl font-bold">95%</p>
+              <p className="text-sm text-white/70">Resolução</p>
+            </div>
+            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+              <p className="text-3xl font-bold">40%</p>
+              <p className="text-sm text-white/70">Economia</p>
+            </div>
+          </div>
+
+          <div className="pt-6 text-sm text-white/60">
+            <p>✓ LGPD Compliance &nbsp; ✓ Multi-tenant &nbsp; ✓ Suporte 24/7</p>
+          </div>
+        </div>
       </div>
     </div>
   );
