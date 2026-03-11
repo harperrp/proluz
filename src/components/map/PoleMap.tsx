@@ -350,7 +350,9 @@ export function PoleMap({
                     </div>
                   </Popup>
                 </Marker>
-              ))}
+                );
+              })}
+
               <FitRoute route={route} />
             </>
           )}
