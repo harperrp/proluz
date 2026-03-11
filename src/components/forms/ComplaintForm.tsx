@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapSearchControl } from '@/components/map/MapSearchControl';
 import L from 'leaflet';
 import { MOCK_POLES, MOCK_CITY_HALLS_LIST } from '@/data/mockData';
 import type { Pole } from '@/types';
@@ -222,6 +223,7 @@ export function ComplaintForm() {
               zoom={15}
               style={{ height: '100%', width: '100%' }}
             >
+              <MapSearchControl />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
