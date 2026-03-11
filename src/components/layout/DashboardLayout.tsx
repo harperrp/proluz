@@ -132,7 +132,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground tracking-wide leading-tight">RAD TECNOLOGIA</p>
-                <p className="text-[10px] text-muted-foreground">Plataforma GovTech</p>
+                <p className="text-[10px] text-muted-foreground">IluminaCity</p>
               </div>
             </div>
 
