@@ -99,6 +99,7 @@ export default function Index() {
             </Badge>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+              <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground block mb-3">IluminaCity</span>
               Centro de Controle<br />
               <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Urbano Inteligente</span>
             </h1>
