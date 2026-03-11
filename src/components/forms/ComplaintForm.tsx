@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapSearchControl } from '@/components/map/MapSearchControl';
 import L from 'leaflet';
 import { MOCK_POLES, MOCK_CITY_HALLS_LIST } from '@/data/mockData';
 import type { Pole } from '@/types';
