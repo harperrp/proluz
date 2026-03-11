@@ -17,6 +17,10 @@ import {
   Search,
   UserCircle,
   Cloud,
+  Building2,
+  Lightbulb,
+  HardHat,
+  UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
