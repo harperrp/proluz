@@ -94,8 +94,8 @@ export default function Index() {
             className="max-w-3xl mx-auto text-center space-y-8"
           >
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              <Zap className="h-3 w-3 mr-1" />
-              Plataforma GovTech de Iluminação Pública
+              <Cpu className="h-3 w-3 mr-1" />
+              RAD Tecnologia · Plataforma GovTech
             </Badge>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
