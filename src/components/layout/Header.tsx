@@ -24,39 +24,43 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+        <Link to="/" className="flex items-center gap-3">
+          {/* RAD + IluminaCity branding */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary glow-primary">
             <Lightbulb className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="hidden sm:block">
-            <span className="text-lg font-semibold">IluminaCity</span>
-            <span className="ml-2 text-xs text-muted-foreground">Gestão de Iluminação Pública</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-foreground">IluminaCity</span>
+              <span className="text-[10px] font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded uppercase tracking-wider">RAD</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground">Gestão Inteligente de Iluminação Pública</span>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+        <nav className="hidden md:flex items-center gap-1">
+          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary transition-all duration-200">
             Início
           </Link>
-          <Link to="/denuncia" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/denuncia" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary transition-all duration-200">
             Fazer Denúncia
           </Link>
           {isAuthenticated && (
-            <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary transition-all duration-200">
               Painel
             </Link>
           )}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Button variant="ghost" className="flex items-center gap-2 hover:bg-secondary">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/30">
                     <User className="h-4 w-4 text-primary" />
                   </div>
                   <div className="hidden sm:block text-left">
@@ -85,7 +89,7 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <Link to="/login">
-              <Button variant="default" size="sm">
+              <Button variant="default" size="sm" className="glow-primary">
                 Entrar
               </Button>
             </Link>
@@ -105,18 +109,18 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-card">
-          <nav className="container py-4 flex flex-col gap-2">
+        <div className="md:hidden border-t border-border/30 bg-card/95 backdrop-blur-xl animate-fade-in">
+          <nav className="container py-4 flex flex-col gap-1">
             <Link
               to="/"
-              className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+              className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-all duration-200"
               onClick={() => setMobileMenuOpen(false)}
             >
               Início
             </Link>
             <Link
               to="/denuncia"
-              className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+              className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-all duration-200"
               onClick={() => setMobileMenuOpen(false)}
             >
               Fazer Denúncia
@@ -124,7 +128,7 @@ export function Header() {
             {isAuthenticated && (
               <Link
                 to="/dashboard"
-                className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-all duration-200"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Painel de Controle

@@ -7,16 +7,16 @@ import {
   AlertTriangle,
   Users,
   Building2,
-  Settings,
   LogOut,
   Menu,
   X,
   Wrench,
   FileText,
+  ChevronRight,
+  Cloud,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 
@@ -78,8 +78,6 @@ const navItems: NavItem[] = [
   },
 ];
 
-const CURRENT_MUNICIPALITY = 'Vargem Grande do Rio Pardo - MG';
-
 const roleLabels: Record<UserRole, string> = {
   ADMIN: 'Administrador Geral',
   CITY_HALL_ADMIN: 'Administrador Municipal',
@@ -104,12 +102,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-card px-4 lg:hidden">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-xl px-4 lg:hidden">
+        <Link to="/dashboard" className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary glow-primary">
             <Lightbulb className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-semibold">IluminaCity</span>
+          <div>
+            <span className="font-bold text-foreground text-sm">IluminaCity</span>
+          </div>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -120,26 +120,44 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-sidebar transition-transform duration-200 ease-in-out lg:static lg:translate-x-0',
+            'fixed inset-y-0 left-0 z-40 w-[272px] transform border-r border-border/30 bg-sidebar transition-transform duration-300 ease-in-out lg:static lg:translate-x-0',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
           <div className="flex h-full flex-col">
-            {/* Logo */}
-            <div className="hidden lg:flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-                <Lightbulb className="h-5 w-5 text-sidebar-primary-foreground" />
+            {/* RAD Branding + Product */}
+            <div className="hidden lg:block px-6 pt-6 pb-4">
+              {/* RAD Tecnologia */}
+              <div className="flex items-center gap-2.5 mb-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md gradient-gold">
+                  <span className="text-xs font-black text-gold-foreground">R</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground tracking-wide">RAD TECNOLOGIA</p>
+                  <p className="text-[10px] font-medium text-accent uppercase tracking-widest">Plataforma GovTech</p>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold text-sidebar-foreground">IluminaCity</span>
+
+              {/* Separator */}
+              <div className="my-4 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
+
+              {/* IluminaCity */}
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">IluminaCity</p>
+                  <p className="text-[10px] text-muted-foreground">Gestão de Iluminação Pública</p>
+                </div>
               </div>
             </div>
 
             {/* User info */}
-            <div className="border-b border-sidebar-border p-4 mt-16 lg:mt-0">
+            <div className="border-y border-sidebar-border/50 px-5 py-4 mt-16 lg:mt-0">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent">
-                  <span className="text-sm font-medium text-sidebar-foreground">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/20">
+                  <span className="text-sm font-semibold text-primary">
                     {user?.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -147,7 +165,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                   <p className="text-sm font-medium text-sidebar-foreground truncate">
                     {user?.name}
                   </p>
-                  <p className="text-xs text-sidebar-foreground/60 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {roleLabels[user?.role || 'CITIZEN']}
                   </p>
                 </div>
@@ -155,44 +173,64 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto p-4">
+            <nav className="flex-1 overflow-y-auto px-4 py-5">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-3">Menu Principal</p>
               <ul className="space-y-1">
-                {filteredNavItems.map(item => (
-                  <li key={item.href}>
-                    <Link
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                        location.pathname === item.href
-                          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                      )}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                {filteredNavItems.map(item => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        to={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={cn(
+                          'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                          isActive
+                            ? 'bg-primary/15 text-primary shadow-sm'
+                            : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                        )}
+                      >
+                        <span className={cn(
+                          'transition-colors',
+                          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-sidebar-foreground'
+                        )}>
+                          {item.icon}
+                        </span>
+                        {item.label}
+                        {isActive && (
+                          <ChevronRight className="ml-auto h-4 w-4 text-primary/60" />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
 
             {/* Bottom actions */}
-            <div className="border-t border-sidebar-border p-4 space-y-1">
+            <div className="border-t border-sidebar-border/50 p-4 space-y-1">
               <Link
                 to="/"
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200"
               >
                 <Lightbulb className="h-5 w-5" />
                 Página Inicial
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200"
               >
                 <LogOut className="h-5 w-5" />
                 Sair
               </button>
+            </div>
+
+            {/* Footer branding */}
+            <div className="px-5 py-4 border-t border-sidebar-border/30">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60">
+                <Cloud className="h-3 w-3" />
+                <span>Infraestrutura em nuvem AWS</span>
+              </div>
             </div>
           </div>
         </aside>
@@ -206,10 +244,21 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto min-h-screen">
-          <div className="container py-6 lg:py-8 space-y-4">
+        <main className="flex-1 overflow-y-auto min-h-screen flex flex-col">
+          <div className="container py-6 lg:py-8 space-y-4 flex-1 animate-fade-in">
             {children}
           </div>
+
+          {/* Institutional footer */}
+          <footer className="border-t border-border/30 px-6 py-4">
+            <div className="container flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground/60">
+              <p>IluminaCity © {new Date().getFullYear()} · Sistema integrante da Plataforma RAD Tecnologia</p>
+              <div className="flex items-center gap-1.5">
+                <Cloud className="h-3 w-3" />
+                <span>Infraestrutura em nuvem AWS</span>
+              </div>
+            </div>
+          </footer>
         </main>
       </div>
     </div>
