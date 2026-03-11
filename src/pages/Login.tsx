@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Zap, Loader2, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowRight, CheckCircle, Globe, Shield, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,21 +70,37 @@ export default function Login() {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md space-y-8"
         >
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary glow-blue">
-                <Zap className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="text-left">
-                <span className="text-lg font-bold block leading-tight">IluminaCity</span>
-                <span className="text-[10px] text-muted-foreground">by RAD Tecnologia</span>
+          {/* RAD Tecnologia Branding */}
+          <div className="text-center space-y-5">
+            <Link to="/" className="inline-block">
+              <div className="flex flex-col items-center gap-3">
+                {/* RAD Logo mark */}
+                <div className="relative">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 glow-blue shadow-lg shadow-primary/20">
+                    <Cpu className="h-7 w-7 text-primary-foreground" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-accent border-2 border-background" />
+                </div>
+                {/* Company name */}
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight">RAD TECNOLOGIA</h2>
+                  <p className="text-[11px] text-muted-foreground tracking-widest uppercase">Plataforma GovTech</p>
+                </div>
               </div>
             </Link>
-            
-            <h1 className="text-2xl font-bold">Acesse o Sistema</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Gestão inteligente de iluminação pública
-            </p>
+
+            {/* System identifier */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-px w-8 bg-border" />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Módulo</span>
+                <div className="h-px w-8 bg-border" />
+              </div>
+              <h1 className="text-2xl font-bold">IluminaCity</h1>
+              <p className="text-sm text-muted-foreground">
+                Sistema de gestão inteligente de iluminação pública para cidades
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -178,6 +194,11 @@ export default function Login() {
               Faça uma denúncia
             </Link>
           </p>
+
+          {/* Institutional footer */}
+          <p className="text-center text-[10px] text-muted-foreground/50 pt-2">
+            IluminaCity © 2026 · Plataforma RAD Tecnologia · Infraestrutura em nuvem AWS
+          </p>
         </motion.div>
       </div>
 
@@ -191,25 +212,33 @@ export default function Login() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative max-w-lg text-center space-y-8"
         >
-          <div className="h-24 w-24 mx-auto rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-sm flex items-center justify-center glow-blue">
-            <Zap className="h-12 w-12 text-primary" />
+          {/* RAD logo large */}
+          <div className="space-y-4">
+            <div className="h-20 w-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 backdrop-blur-sm flex items-center justify-center glow-blue">
+              <Cpu className="h-10 w-10 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold tracking-widest uppercase text-muted-foreground">RAD Tecnologia</h2>
+              <p className="text-[11px] text-muted-foreground/60 tracking-wider uppercase">Plataforma GovTech</p>
+            </div>
           </div>
           
           <div>
             <h2 className="text-3xl font-bold mb-4">
-              Centro de Controle<br />
-              <span className="text-primary">Urbano Inteligente</span>
+              Gestão Municipal<br />
+              <span className="text-primary">Inteligente</span>
             </h2>
             <p className="text-muted-foreground max-w-sm mx-auto">
-              Plataforma GovTech para gestão completa de iluminação pública com mapa interativo e rotas otimizadas.
+              Plataforma integrada de soluções tecnológicas para prefeituras. 
+              Iluminação pública, gestão urbana e muito mais.
             </p>
           </div>
           
           <div className="grid grid-cols-3 gap-4">
             {[
-              { value: '60%', label: 'Mais rápido' },
-              { value: '95%', label: 'Resolução' },
-              { value: '40%', label: 'Economia' },
+              { icon: <Globe className="h-5 w-5 text-primary" />, value: '60%', label: 'Mais rápido' },
+              { icon: <Shield className="h-5 w-5 text-accent" />, value: '95%', label: 'Resolução' },
+              { icon: <Cpu className="h-5 w-5 text-success" />, value: '40%', label: 'Economia' },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -218,7 +247,8 @@ export default function Login() {
                 transition={{ delay: 0.5 + i * 0.15 }}
                 className="p-4 rounded-xl bg-card/30 border border-border/30 backdrop-blur-sm"
               >
-                <p className="text-2xl font-bold text-primary font-mono">{stat.value}</p>
+                <div className="flex justify-center mb-2">{stat.icon}</div>
+                <p className="text-2xl font-bold text-foreground font-mono">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
               </motion.div>
             ))}
@@ -229,6 +259,10 @@ export default function Login() {
             <span>✓ Multi-tenant</span>
             <span>✓ Suporte 24/7</span>
           </div>
+
+          <p className="text-[10px] text-muted-foreground/40">
+            Infraestrutura em nuvem AWS · Segurança de dados certificada
+          </p>
         </motion.div>
       </div>
     </div>
