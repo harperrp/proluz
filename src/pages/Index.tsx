@@ -36,7 +36,7 @@ const stats = [
   { value: '60%', label: 'Redução no tempo', icon: <Timer className="h-5 w-5" /> },
   { value: '95%', label: 'Taxa de resolução', icon: <Target className="h-5 w-5" /> },
   { value: '40%', label: 'Economia operacional', icon: <TrendingDown className="h-5 w-5" /> },
-  { value: '18h', label: 'Tempo médio', icon: <Zap className="h-5 w-5" /> },
+  { value: '18h', label: 'Tempo médio', icon: <Timer className="h-5 w-5" /> },
 ];
 
 const steps = [
