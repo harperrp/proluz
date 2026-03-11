@@ -353,10 +353,12 @@ export default function Index() {
       <footer className="border-t border-border/30 py-8">
         <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <span>IluminaCity by RAD Tecnologia</span>
+            <Cpu className="h-4 w-4 text-primary" />
+            <span><strong className="text-foreground/70">RAD Tecnologia</strong> · IluminaCity</span>
           </div>
-          <p>© 2024 RAD Tecnologia. Todos os direitos reservados.</p>
+          <p className="flex items-center gap-1">
+            © 2026 RAD Tecnologia. Todos os direitos reservados. <Cloud className="h-3 w-3 ml-1" /> AWS
+          </p>
         </div>
       </footer>
     </div>
