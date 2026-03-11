@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { 
-  Zap, 
+  Cpu, 
   MapPin, 
   AlertTriangle, 
   Users, 
@@ -17,6 +17,7 @@ import {
   Timer,
   Target,
   DollarSign,
+  Cloud,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +36,7 @@ const stats = [
   { value: '60%', label: 'Redução no tempo', icon: <Timer className="h-5 w-5" /> },
   { value: '95%', label: 'Taxa de resolução', icon: <Target className="h-5 w-5" /> },
   { value: '40%', label: 'Economia operacional', icon: <TrendingDown className="h-5 w-5" /> },
-  { value: '18h', label: 'Tempo médio', icon: <Zap className="h-5 w-5" /> },
+  { value: '18h', label: 'Tempo médio', icon: <Timer className="h-5 w-5" /> },
 ];
 
 const steps = [
@@ -57,13 +58,13 @@ export default function Index() {
       {/* Navbar */}
       <header className="fixed top-0 w-full z-50 border-b border-border/30 bg-background/80 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-4 w-4 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
+              <Cpu className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-bold text-sm">IluminaCity</span>
-              <span className="text-[10px] text-muted-foreground block leading-tight">by RAD Tecnologia</span>
+              <span className="font-bold text-sm block leading-tight">RAD TECNOLOGIA</span>
+              <span className="text-[10px] text-muted-foreground tracking-wider uppercase">Plataforma GovTech</span>
             </div>
           </Link>
           <div className="flex items-center gap-3">
@@ -93,11 +94,12 @@ export default function Index() {
             className="max-w-3xl mx-auto text-center space-y-8"
           >
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              <Zap className="h-3 w-3 mr-1" />
-              Plataforma GovTech de Iluminação Pública
+              <Cpu className="h-3 w-3 mr-1" />
+              RAD Tecnologia · Plataforma GovTech
             </Badge>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+              <span className="text-sm font-semibold tracking-widest uppercase text-muted-foreground block mb-3">IluminaCity</span>
               Centro de Controle<br />
               <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Urbano Inteligente</span>
             </h1>
@@ -351,10 +353,12 @@ export default function Index() {
       <footer className="border-t border-border/30 py-8">
         <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <span>IluminaCity by RAD Tecnologia</span>
+            <Cpu className="h-4 w-4 text-primary" />
+            <span><strong className="text-foreground/70">RAD Tecnologia</strong> · IluminaCity</span>
           </div>
-          <p>© 2024 RAD Tecnologia. Todos os direitos reservados.</p>
+          <p className="flex items-center gap-1">
+            © 2026 RAD Tecnologia. Todos os direitos reservados. <Cloud className="h-3 w-3 ml-1" /> AWS
+          </p>
         </div>
       </footer>
     </div>
