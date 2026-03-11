@@ -126,30 +126,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         >
           <div className="flex h-full flex-col">
             {/* RAD Branding + Product */}
-            <div className="hidden lg:block px-6 pt-6 pb-4">
-              {/* RAD Tecnologia */}
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md gradient-gold">
-                  <span className="text-xs font-black text-gold-foreground">R</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground tracking-wide">RAD TECNOLOGIA</p>
-                  <p className="text-[10px] font-medium text-accent uppercase tracking-widest">Plataforma GovTech</p>
-                </div>
+            <div className="hidden lg:flex items-center gap-3 px-5 pt-5 pb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-gold shrink-0">
+                <span className="text-sm font-black text-gold-foreground">R</span>
               </div>
-
-              {/* Separator */}
-              <div className="my-4 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
-
-              {/* IluminaCity */}
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
-                  <Lightbulb className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">IluminaCity</p>
-                  <p className="text-[10px] text-muted-foreground">Gestão de Iluminação Pública</p>
-                </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground tracking-wide leading-tight">RAD TECNOLOGIA</p>
+                <p className="text-[10px] text-muted-foreground">Plataforma GovTech</p>
               </div>
             </div>
 
