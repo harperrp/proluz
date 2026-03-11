@@ -12,10 +12,11 @@ import {
   Wrench,
   FileText,
   ChevronLeft,
-  Zap,
+  Cpu,
   Bell,
   Search,
   UserCircle,
+  Cloud,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,40 @@ const roleLabels: Record<UserRole, string> = {
   CITIZEN: 'Cidadão',
 };
 
+function RADBrandingBlock({ collapsed }: { collapsed: boolean }) {
+  if (collapsed) {
+    return (
+      <div className="flex flex-col items-center gap-1 py-1">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 glow-blue">
+          <Cpu className="h-5 w-5 text-primary-foreground" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {/* RAD Tecnologia identity */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 glow-blue">
+          <Cpu className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <div className="overflow-hidden">
+          <span className="font-bold text-sidebar-foreground text-sm tracking-tight block leading-tight">RAD TECNOLOGIA</span>
+          <span className="text-[10px] text-muted-foreground tracking-wider uppercase">Plataforma GovTech</span>
+        </div>
+      </div>
+      {/* Separator + Module */}
+      <div className="border-t border-sidebar-border pt-2">
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+          <span className="text-xs font-semibold text-accent">IluminaCity</span>
+        </div>
+        <p className="text-[10px] text-muted-foreground ml-3.5 leading-tight">Gestão de Iluminação Pública</p>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -108,22 +143,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           collapsed ? 'w-[72px]' : 'w-[260px]'
         )}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-sidebar-border gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary glow-blue">
-            <Zap className="h-5 w-5 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden">
-              <span className="font-bold text-sidebar-foreground text-sm">IluminaCity</span>
-              <p className="text-[10px] text-muted-foreground leading-tight">by RAD Tecnologia</p>
-            </motion.div>
-          )}
+        {/* Branding header */}
+        <div className="px-4 py-4 border-b border-sidebar-border flex items-start justify-between">
+          <RADBrandingBlock collapsed={collapsed} />
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
-              'ml-auto p-1.5 rounded-md hover:bg-sidebar-accent text-muted-foreground transition-colors',
-              collapsed && 'ml-0'
+              'p-1.5 rounded-md hover:bg-sidebar-accent text-muted-foreground transition-colors mt-1',
+              collapsed && 'mx-auto mt-0'
             )}
           >
             <ChevronLeft className={cn('h-4 w-4 transition-transform', collapsed && 'rotate-180')} />
@@ -169,8 +196,20 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        {/* User footer */}
-        <div className="border-t border-sidebar-border p-3">
+        {/* Sidebar footer */}
+        <div className="border-t border-sidebar-border p-3 space-y-2">
+          {/* Institutional footer */}
+          {!collapsed && (
+            <div className="px-2 py-1.5">
+              <p className="text-[9px] text-muted-foreground/50 leading-relaxed text-center">
+                IluminaCity © 2026 · Plataforma RAD Tecnologia
+              </p>
+              <p className="text-[9px] text-muted-foreground/40 text-center flex items-center justify-center gap-1">
+                <Cloud className="h-2.5 w-2.5" /> Infraestrutura em nuvem AWS
+              </p>
+            </div>
+          )}
+          {/* User */}
           <div className={cn('flex items-center gap-3 rounded-lg px-2 py-2', collapsed && 'justify-center')}>
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
               <span className="text-xs font-semibold text-primary">
@@ -199,10 +238,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Zap className="h-4 w-4 text-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
+            <Cpu className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-bold text-sm">IluminaCity</span>
+          <div>
+            <span className="font-bold text-xs block leading-tight">RAD TECNOLOGIA</span>
+            <span className="text-[9px] text-accent font-medium">IluminaCity</span>
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)} className="h-9 w-9">
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -227,14 +269,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border/50 bg-sidebar lg:hidden"
             >
-              <div className="flex h-14 items-center gap-2 px-4 border-b border-sidebar-border">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Zap className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <div>
-                  <span className="font-bold text-sidebar-foreground text-sm">IluminaCity</span>
-                  <p className="text-[10px] text-muted-foreground">by RAD Tecnologia</p>
-                </div>
+              <div className="px-4 py-4 border-b border-sidebar-border">
+                <RADBrandingBlock collapsed={false} />
               </div>
 
               <nav className="flex-1 overflow-y-auto py-4 px-3">
@@ -262,7 +298,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 </ul>
               </nav>
 
-              <div className="border-t border-sidebar-border p-3">
+              <div className="border-t border-sidebar-border p-3 space-y-2">
+                <p className="text-[9px] text-muted-foreground/50 text-center">
+                  IluminaCity © 2026 · Plataforma RAD Tecnologia
+                </p>
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
@@ -285,7 +324,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       >
         {/* Top bar */}
         <div className="sticky top-0 z-30 hidden lg:flex h-14 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-xl px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {/* Platform breadcrumb */}
+            <span className="text-[11px] text-muted-foreground/60 font-medium tracking-wide">
+              Plataforma RAD <span className="text-border mx-1">•</span> <span className="text-accent">IluminaCity</span>
+            </span>
+            <div className="h-4 w-px bg-border" />
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
