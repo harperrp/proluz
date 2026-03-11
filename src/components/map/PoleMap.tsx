@@ -310,19 +310,37 @@ export function PoleMap({
           {/* Route polyline and numbered markers */}
           {route && route.length > 0 && (
             <>
+              {/* Route shadow/glow line */}
               <Polyline
                 positions={roadGeometry.length > 0 ? roadGeometry : route.map(r => [r.latitude, r.longitude] as [number, number])}
-                pathOptions={{ color: 'hsl(var(--primary))', weight: 4, opacity: 0.8, dashArray: '10, 6' }}
+                pathOptions={{ color: '#1e3a5f', weight: 8, opacity: 0.25 }}
               />
-              {route.map((point, idx) => (
+              {/* Main route line */}
+              <Polyline
+                positions={roadGeometry.length > 0 ? roadGeometry : route.map(r => [r.latitude, r.longitude] as [number, number])}
+                pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.9 }}
+              />
+              {/* Animated dashes on top */}
+              <Polyline
+                positions={roadGeometry.length > 0 ? roadGeometry : route.map(r => [r.latitude, r.longitude] as [number, number])}
+                pathOptions={{ color: '#93c5fd', weight: 2, opacity: 0.7, dashArray: '8, 12' }}
+              />
+              {route.map((point, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === route.length - 1;
+                const bg = isFirst ? '#22c55e' : isLast ? '#ef4444' : '#3b82f6';
+                const size = isFirst || isLast ? 34 : 28;
+                const fontSize = isFirst || isLast ? 15 : 13;
+                const icon = isFirst ? '▶' : isLast ? '⬤' : `${idx + 1}`;
+                return (
                 <Marker
                   key={`route-${idx}`}
                   position={[point.latitude, point.longitude]}
                   icon={L.divIcon({
-                    html: `<div style="background:hsl(217,91%,60%);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${idx + 1}</div>`,
+                    html: `<div style="background:${bg};color:white;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fontSize}px;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.35);letter-spacing:-0.5px">${icon}</div>`,
                     className: 'route-number-marker',
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14],
+                    iconSize: [size, size],
+                    iconAnchor: [size / 2, size / 2],
                   })}
                 >
                   <Popup>
@@ -332,7 +350,9 @@ export function PoleMap({
                     </div>
                   </Popup>
                 </Marker>
-              ))}
+                );
+              })}
+
               <FitRoute route={route} />
             </>
           )}
