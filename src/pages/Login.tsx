@@ -19,9 +19,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const demoAccounts = [
   { email: 'admin@sistema.gov.br', password: 'admin123', role: 'Administrador Geral', description: 'Acesso total ao sistema', color: 'bg-primary' },
-  { email: 'prefeitura@cidade.gov.br', password: 'prefeitura123', role: 'Admin. Prefeitura', description: 'Gestão municipal', color: 'bg-blue-600' },
-  { email: 'secretario@cidade.gov.br', password: 'secretario123', role: 'Secretário', description: 'Validar denúncias', color: 'bg-amber-600' },
-  { email: 'tecnico@cidade.gov.br', password: 'tecnico123', role: 'Técnico', description: 'Executa manutenções', color: 'bg-emerald-600' },
+  { email: 'prefeitura@cidade.gov.br', password: 'prefeitura123', role: 'Admin. Prefeitura', description: 'Gestão municipal', color: 'bg-primary/70' },
+  { email: 'secretario@cidade.gov.br', password: 'secretario123', role: 'Secretário', description: 'Validar denúncias', color: 'bg-accent' },
+  { email: 'tecnico@cidade.gov.br', password: 'tecnico123', role: 'Técnico', description: 'Executa manutenções', color: 'bg-success' },
 ];
 
 export default function Login() {
@@ -66,14 +66,17 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+            <Link to="/" className="inline-flex items-center gap-2.5 mb-8">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary glow-primary">
                 <Lightbulb className="h-6 w-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">IluminaCity</span>
+              <div className="text-left">
+                <span className="text-xl font-bold block">IluminaCity</span>
+                <span className="text-[10px] text-accent font-medium uppercase tracking-widest">RAD Tecnologia</span>
+              </div>
             </Link>
             
             <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
@@ -110,7 +113,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -120,7 +123,7 @@ export default function Login() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+            <Button type="submit" className="w-full glow-primary" size="lg" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -137,7 +140,7 @@ export default function Login() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t" />
+              <div className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
@@ -152,10 +155,10 @@ export default function Login() {
                 key={account.email}
                 type="button"
                 onClick={() => handleDemoSelect(account)}
-                className={`relative text-left p-3 rounded-lg border transition-all ${
+                className={`relative text-left p-3 rounded-xl border transition-all duration-200 ${
                   selectedDemo === account.email 
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary' 
-                    : 'bg-card hover:bg-muted/50 hover:border-primary/50'
+                    ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-sm' 
+                    : 'border-border/50 bg-card hover:bg-secondary hover:border-border'
                 }`}
               >
                 {selectedDemo === account.email && (
@@ -179,36 +182,50 @@ export default function Login() {
 
       {/* Right side - Decorative */}
       <div className="hidden lg:flex flex-1 gradient-hero items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
         
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-1/4 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+
         <div className="relative max-w-lg text-primary-foreground text-center space-y-6">
-          <div className="h-20 w-20 mx-auto rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="h-12 w-12 rounded-xl bg-accent/20 backdrop-blur-sm flex items-center justify-center">
+              <span className="text-lg font-black text-accent">R</span>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold tracking-wide">RAD TECNOLOGIA</p>
+              <p className="text-[10px] text-accent uppercase tracking-widest">Plataforma GovTech</p>
+            </div>
+          </div>
+
+          <div className="h-20 w-20 mx-auto rounded-2xl bg-primary/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-primary/30">
             <Lightbulb className="h-10 w-10" />
           </div>
           <h2 className="text-3xl font-bold">
             Gestão Inteligente de Iluminação Pública
           </h2>
-          <p className="text-lg text-white/80">
+          <p className="text-lg text-foreground/60">
             Transforme a forma como sua prefeitura gerencia a iluminação pública. 
             Reduza custos, melhore o tempo de resposta e aumente a satisfação dos cidadãos.
           </p>
           
           <div className="grid grid-cols-3 gap-4 pt-8">
-            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+            <div className="p-4 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/10">
               <p className="text-3xl font-bold">60%</p>
-              <p className="text-sm text-white/70">Mais rápido</p>
+              <p className="text-sm text-foreground/50">Mais rápido</p>
             </div>
-            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+            <div className="p-4 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/10">
               <p className="text-3xl font-bold">95%</p>
-              <p className="text-sm text-white/70">Resolução</p>
+              <p className="text-sm text-foreground/50">Resolução</p>
             </div>
-            <div className="p-4 rounded-lg bg-white/10 backdrop-blur-sm">
+            <div className="p-4 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/10">
               <p className="text-3xl font-bold">40%</p>
-              <p className="text-sm text-white/70">Economia</p>
+              <p className="text-sm text-foreground/50">Economia</p>
             </div>
           </div>
 
-          <div className="pt-6 text-sm text-white/60">
+          <div className="pt-6 text-sm text-foreground/40">
             <p>✓ LGPD Compliance &nbsp; ✓ Multi-tenant &nbsp; ✓ Suporte 24/7</p>
           </div>
         </div>
