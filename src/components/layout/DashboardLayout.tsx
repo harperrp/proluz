@@ -105,7 +105,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-xl px-4 lg:hidden">
         <Link to="/dashboard" className="flex items-center gap-2.5">
-          <img src={radgovLogo} alt="RAD GOV" className="h-8 w-auto object-contain" />
+          <img src={radgovLogo} alt="RAD GOV" className="h-12 w-auto object-contain" />
           <span className="font-bold text-foreground text-sm">IluminaCity</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
