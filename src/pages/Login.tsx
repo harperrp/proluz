@@ -187,14 +187,8 @@ export default function Login() {
         <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-lg text-primary-foreground text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-xl bg-accent/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-lg font-black text-accent">R</span>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-bold tracking-wide">RAD TECNOLOGIA</p>
-              <p className="text-[10px] text-accent uppercase tracking-widest">Plataforma GovTech</p>
-            </div>
+          <div className="flex items-center justify-center mb-8">
+            <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-14 w-auto object-contain" />
           </div>
 
           <div className="h-20 w-20 mx-auto rounded-2xl bg-primary/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-primary/30">

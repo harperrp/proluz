@@ -127,14 +127,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         >
           <div className="flex h-full flex-col">
             {/* RAD Branding + Product */}
-            <div className="hidden lg:flex items-center gap-3 px-5 pt-5 pb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-gold shrink-0">
-                <span className="text-sm font-black text-gold-foreground">R</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground tracking-wide leading-tight">RAD TECNOLOGIA</p>
-                <p className="text-[10px] text-muted-foreground">IluminaCity</p>
-              </div>
+            <div className="hidden lg:flex items-center justify-center px-5 pt-5 pb-4">
+              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-10 w-auto object-contain" />
             </div>
 
             {/* User info */}
