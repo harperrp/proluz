@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Lightbulb, Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import radgovLogo from '@/assets/radgov-logo.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,16 +28,10 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
-          {/* RAD + IluminaCity branding */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary glow-primary">
-            <Lightbulb className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-9 w-auto object-contain" />
           <div className="hidden sm:block">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">IluminaCity</span>
-              <span className="text-[10px] font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded uppercase tracking-wider">RAD</span>
-            </div>
-            <span className="text-[11px] text-muted-foreground">Gestão Inteligente de Iluminação Pública</span>
+            <span className="text-lg font-bold text-foreground">IluminaCity</span>
+            <span className="block text-[11px] text-muted-foreground">Gestão Inteligente de Iluminação Pública</span>
           </div>
         </Link>
 

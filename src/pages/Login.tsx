@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Lightbulb, Loader2, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowRight, CheckCircle, Lightbulb } from 'lucide-react';
+import radgovLogo from '@/assets/radgov-logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,13 +70,10 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary glow-primary">
-                <Lightbulb className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <Link to="/" className="inline-flex items-center gap-3 mb-8">
+              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-10 w-auto object-contain" />
               <div className="text-left">
                 <span className="text-xl font-bold block">IluminaCity</span>
-                <span className="text-[10px] text-accent font-medium uppercase tracking-widest">RAD Tecnologia</span>
               </div>
             </Link>
             
@@ -189,14 +187,8 @@ export default function Login() {
         <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-lg text-primary-foreground text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-xl bg-accent/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-lg font-black text-accent">R</span>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-bold tracking-wide">RAD TECNOLOGIA</p>
-              <p className="text-[10px] text-accent uppercase tracking-widest">Plataforma GovTech</p>
-            </div>
+          <div className="flex items-center justify-center mb-8">
+            <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-14 w-auto object-contain" />
           </div>
 
           <div className="h-20 w-20 mx-auto rounded-2xl bg-primary/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-primary/30">

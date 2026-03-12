@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
+import radgovLogo from '@/assets/radgov-logo.png';
 
 interface NavItem {
   label: string;
@@ -104,12 +105,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile header */}
       <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-xl px-4 lg:hidden">
         <Link to="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary glow-primary">
-            <Lightbulb className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div>
-            <span className="font-bold text-foreground text-sm">IluminaCity</span>
-          </div>
+          <img src={radgovLogo} alt="RAD GOV" className="h-8 w-auto object-contain" />
+          <span className="font-bold text-foreground text-sm">IluminaCity</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -126,14 +123,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         >
           <div className="flex h-full flex-col">
             {/* RAD Branding + Product */}
-            <div className="hidden lg:flex items-center gap-3 px-5 pt-5 pb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-gold shrink-0">
-                <span className="text-sm font-black text-gold-foreground">R</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground tracking-wide leading-tight">RAD TECNOLOGIA</p>
-                <p className="text-[10px] text-muted-foreground">IluminaCity</p>
-              </div>
+            <div className="hidden lg:flex items-center justify-center px-5 pt-5 pb-4">
+              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-10 w-auto object-contain" />
             </div>
 
             {/* User info */}
