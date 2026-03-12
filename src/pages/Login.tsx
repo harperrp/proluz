@@ -71,7 +71,7 @@ export default function Login() {
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="text-center">
             <Link to="/" className="inline-flex items-center gap-3 mb-8">
-              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-10 w-auto object-contain" />
+              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-16 w-auto object-contain" />
               <div className="text-left">
                 <span className="text-xl font-bold block">IluminaCity</span>
               </div>
