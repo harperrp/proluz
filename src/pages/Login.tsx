@@ -70,13 +70,10 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary glow-primary">
-                <Lightbulb className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <Link to="/" className="inline-flex items-center gap-3 mb-8">
+              <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-10 w-auto object-contain" />
               <div className="text-left">
                 <span className="text-xl font-bold block">IluminaCity</span>
-                <span className="text-[10px] text-accent font-medium uppercase tracking-widest">RAD Tecnologia</span>
               </div>
             </Link>
             
