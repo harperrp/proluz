@@ -188,7 +188,7 @@ export default function Login() {
 
         <div className="relative max-w-lg text-primary-foreground text-center space-y-6">
           <div className="flex items-center justify-center mb-8">
-            <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-14 w-auto object-contain" />
+            <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-20 w-auto object-contain" />
           </div>
 
           <div className="h-20 w-20 mx-auto rounded-2xl bg-primary/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-primary/30">
