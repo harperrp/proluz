@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Lightbulb, Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import radgovLogo from '@/assets/radgov-logo.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
