@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
+import radgovLogo from '@/assets/radgov-logo.png';
 
 interface NavItem {
   label: string;
