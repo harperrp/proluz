@@ -70,6 +70,7 @@ export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds
       const lat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat ?? '').replace(',', '.'));
       const lng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng ?? '').replace(',', '.'));
       const idPip = String(row[colId ?? ''] ?? '').trim();
+      const luminaria = String(row[colLum ?? ''] ?? '').trim();
       const status: PoleStatus = 'FUNCIONANDO';
 
       const valid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
