@@ -50,6 +50,10 @@ export default function DashboardPoles() {
     setPoles(prev => [...prev, newPole]);
   };
 
+  const handleImportPoles = (importedPoles: Pole[]) => {
+    setPoles(prev => [...prev, ...importedPoles]);
+  };
+
   const toggleStatus = (pole: Pole) => {
     setStatusChangeTarget(pole);
   };
