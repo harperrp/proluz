@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,22 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { Pole, PoleStatus } from '@/types';
 import { toast } from 'sonner';
-
-interface CemigRow {
-  MUNICIPIO?: string;
-  'COD MUNICIPIO'?: string;
-  LONGITUDE?: string;
-  LATITUDE?: string;
-  'ID PIP'?: string;
-  LUMINARIA?: string;
-  BRACO?: string;
-  'TIPO LAMPADA'?: string;
-  'POTÊNCIA'?: string;
-  POTENCIA?: string;
-  'QTD LÂMPADAS'?: string;
-  'QTD LAMPADAS'?: string;
-  [key: string]: string | undefined;
-}
 
 interface ParsedPole {
   idPip: string;
@@ -46,6 +30,15 @@ interface ImportPolesModalProps {
   existingPoleIds: string[];
 }
 
+function findColumn(headers: string[], ...candidates: string[]): string | undefined {
+  const normalized = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  for (const c of candidates) {
+    const found = headers.find(h => normalized(h) === normalized(c));
+    if (found) return found;
+  }
+  return undefined;
+}
+
 export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds }: ImportPolesModalProps) {
   const [parsedPoles, setParsedPoles] = useState<ParsedPole[]>([]);
   const [fileName, setFileName] = useState('');
@@ -58,46 +51,88 @@ export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds
     setStep('upload');
   };
 
+  const parseRows = (rows: Record<string, any>[]) => {
+    if (rows.length === 0) return [];
+
+    const headers = Object.keys(rows[0]);
+    const colLat = findColumn(headers, 'LATITUDE', 'Latitude', 'lat');
+    const colLng = findColumn(headers, 'LONGITUDE', 'Longitude', 'lng', 'long');
+    const colId = findColumn(headers, 'ID PIP', 'ID_PIP', 'IDPIP');
+    const colLum = findColumn(headers, 'LUMINARIA', 'Luminaria', 'Luminária');
+    const colBraco = findColumn(headers, 'BRACO', 'Braço', 'BRAÇO');
+    const colTipo = findColumn(headers, 'TIPO LAMPADA', 'TIPO LÂMPADA', 'Tipo Lampada', 'TIPO_LAMPADA');
+    const colPot = findColumn(headers, 'POTÊNCIA', 'POTENCIA', 'Potencia', 'Potência');
+    const colQtd = findColumn(headers, 'QTD LÂMPADAS', 'QTD LAMPADAS', 'QTD_LAMPADAS');
+
+    return rows.map((row): ParsedPole => {
+      const rawLat = row[colLat ?? ''];
+      const rawLng = row[colLng ?? ''];
+      const lat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat ?? '').replace(',', '.'));
+      const lng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng ?? '').replace(',', '.'));
+      const idPip = String(row[colId ?? ''] ?? '').trim();
+      const luminaria = String(row[colLum ?? ''] ?? '').trim();
+      const status: PoleStatus = luminaria.toLowerCase() === 'aberta' ? 'QUEIMADO' : 'FUNCIONANDO';
+
+      const valid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+      const duplicate = existingPoleIds.includes(idPip);
+      const error = !valid ? 'Coordenadas inválidas' : duplicate ? 'ID já cadastrado' : undefined;
+
+      return {
+        idPip,
+        latitude: lat,
+        longitude: lng,
+        status,
+        luminaria,
+        braco: String(row[colBraco ?? ''] ?? '').trim(),
+        tipoLampada: String(row[colTipo ?? ''] ?? '').trim(),
+        potencia: String(row[colPot ?? ''] ?? '').trim(),
+        qtdLampadas: String(row[colQtd ?? ''] ?? '').trim(),
+        valid: valid && !duplicate,
+        error,
+      };
+    });
+  };
+
   const handleFile = (file: File) => {
     setFileName(file.name);
+    const reader = new FileReader();
 
-    Papa.parse<CemigRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      encoding: 'UTF-8',
-      complete: (results) => {
-        const poles: ParsedPole[] = results.data.map((row) => {
-          const lat = parseFloat(String(row.LATITUDE ?? '').replace(',', '.'));
-          const lng = parseFloat(String(row.LONGITUDE ?? '').replace(',', '.'));
-          const idPip = String(row['ID PIP'] ?? '').trim();
-          const luminaria = String(row.LUMINARIA ?? '').trim();
-          const status: PoleStatus = luminaria.toLowerCase() === 'aberta' ? 'QUEIMADO' : 'FUNCIONANDO';
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-          const valid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
-          const error = !valid ? 'Coordenadas inválidas' : existingPoleIds.includes(idPip) ? 'ID já cadastrado' : undefined;
+        // Try to find the sheet with data (check all sheets, prefer ones with LATITUDE column)
+        let rows: Record<string, any>[] = [];
+        for (const sheetName of workbook.SheetNames) {
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+          if (json.length === 0) continue;
+          const headers = Object.keys(json[0]);
+          const hasLatitude = headers.some(h =>
+            h.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('latitude')
+          );
+          if (hasLatitude) {
+            rows = json;
+            break;
+          }
+          if (rows.length === 0) rows = json; // fallback to first non-empty sheet
+        }
 
-          return {
-            idPip,
-            latitude: lat,
-            longitude: lng,
-            status,
-            luminaria,
-            braco: String(row.BRACO ?? row['BRAÇO'] ?? '').trim(),
-            tipoLampada: String(row['TIPO LAMPADA'] ?? row['TIPO LÂMPADA'] ?? '').trim(),
-            potencia: String(row['POTÊNCIA'] ?? row.POTENCIA ?? '').trim(),
-            qtdLampadas: String(row['QTD LÂMPADAS'] ?? row['QTD LAMPADAS'] ?? '').trim(),
-            valid: valid && !existingPoleIds.includes(idPip),
-            error,
-          };
-        });
+        if (rows.length === 0) {
+          toast.error('Nenhum dado encontrado no arquivo.');
+          return;
+        }
 
+        const poles = parseRows(rows);
         setParsedPoles(poles);
         setStep('preview');
-      },
-      error: () => {
-        toast.error('Erro ao ler o arquivo. Verifique se é um CSV válido.');
-      },
-    });
+      } catch {
+        toast.error('Erro ao ler o arquivo. Verifique o formato.');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
   };
 
   const validPoles = parsedPoles.filter((p) => p.valid);
@@ -132,7 +167,7 @@ export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds
             Importar Postes — Planilha CEMIG
           </DialogTitle>
           <DialogDescription>
-            Envie um arquivo CSV com as colunas: LONGITUDE, LATITUDE, ID PIP, LUMINARIA, BRACO, TIPO LAMPADA, POTÊNCIA
+            Envie um arquivo CSV ou Excel (.xlsx, .xlsm) com as colunas: LONGITUDE, LATITUDE, ID PIP, LUMINARIA, BRACO, TIPO LAMPADA, POTÊNCIA
           </DialogDescription>
         </DialogHeader>
 
@@ -145,10 +180,10 @@ export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds
           >
             <Upload className="h-12 w-12 text-muted-foreground" />
             <div className="text-center">
-              <p className="font-medium">Arraste o arquivo CSV aqui</p>
-              <p className="text-sm text-muted-foreground">ou clique para selecionar</p>
+              <p className="font-medium">Arraste o arquivo aqui</p>
+              <p className="text-sm text-muted-foreground">CSV, Excel (.xlsx, .xlsm)</p>
             </div>
-            <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+            <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xlsm,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
           </div>
         )}
 
