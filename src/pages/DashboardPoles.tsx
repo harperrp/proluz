@@ -27,6 +27,7 @@ export default function DashboardPoles() {
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pole | null>(null);
 
   
