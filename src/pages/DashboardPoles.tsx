@@ -261,6 +261,7 @@ export default function DashboardPoles() {
 
       <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
       <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} existingPoles={poles} />
+      <ImportPolesModal open={importOpen} onOpenChange={setImportOpen} onImport={handleImportPoles} existingPoleIds={poles.map(p => p.id)} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
