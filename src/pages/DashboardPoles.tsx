@@ -79,10 +79,16 @@ export default function DashboardPoles() {
             <h1 className="text-2xl lg:text-3xl font-bold">Postes</h1>
             <p className="text-muted-foreground">Gerencie todos os postes cadastrados no sistema</p>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Poste
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Planilha
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Poste
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
