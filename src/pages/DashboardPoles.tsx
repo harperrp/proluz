@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ImportPolesModal } from '@/components/poles/ImportPolesModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Lightbulb, Search, Plus, MapPin, Eye, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
+import { Lightbulb, Search, Plus, MapPin, Eye, AlertTriangle, CheckCircle, Trash2, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -26,6 +27,7 @@ export default function DashboardPoles() {
   const [historyPole, setHistoryPole] = useState<Pole | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pole | null>(null);
 
   
@@ -46,6 +48,10 @@ export default function DashboardPoles() {
   const handleCreatePole = (data: { id: string; address: string; latitude: number; longitude: number; status: PoleStatus }) => {
     const newPole: Pole = { ...data, cityHallId: '1', createdAt: new Date(), updatedAt: new Date() };
     setPoles(prev => [...prev, newPole]);
+  };
+
+  const handleImportPoles = (importedPoles: Pole[]) => {
+    setPoles(prev => [...prev, ...importedPoles]);
   };
 
   const toggleStatus = (pole: Pole) => {
@@ -77,10 +83,16 @@ export default function DashboardPoles() {
             <h1 className="text-2xl lg:text-3xl font-bold">Postes</h1>
             <p className="text-muted-foreground">Gerencie todos os postes cadastrados no sistema</p>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Poste
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Planilha
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Poste
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -249,6 +261,7 @@ export default function DashboardPoles() {
 
       <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
       <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} existingPoles={poles} />
+      <ImportPolesModal open={importOpen} onOpenChange={setImportOpen} onImport={handleImportPoles} existingPoleIds={poles.map(p => p.id)} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
