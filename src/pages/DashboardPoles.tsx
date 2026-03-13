@@ -11,15 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Pole, PoleStatus } from '@/types';
-import { MOCK_POLES, getPoleStats, getRecurrenceLevel, formatDateBR } from '@/data/mockData';
+import { getPoleStats, getRecurrenceLevel, formatDateBR } from '@/data/mockData';
 import { PoleHistoryDrawer } from '@/components/poles/PoleHistoryDrawer';
 import { CreatePoleModal } from '@/components/poles/CreatePoleModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePoles } from '@/contexts/PolesContext';
 import { toast } from 'sonner';
 
 export default function DashboardPoles() {
   const { hasPermission } = useAuth();
-  const [poles, setPoles] = useState<Pole[]>(MOCK_POLES);
+  const { poles, addPole, addPoles, removePole, updatePoleStatus } = usePoles();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PoleStatus | 'TODOS'>('TODOS');
   const [statusChangeTarget, setStatusChangeTarget] = useState<Pole | null>(null);
@@ -29,8 +30,6 @@ export default function DashboardPoles() {
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pole | null>(null);
-
-  
 
   const filteredPoles = poles.filter(pole => {
     const matchesSearch = pole.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,11 +46,7 @@ export default function DashboardPoles() {
 
   const handleCreatePole = (data: { id: string; address: string; latitude: number; longitude: number; status: PoleStatus }) => {
     const newPole: Pole = { ...data, cityHallId: '1', createdAt: new Date(), updatedAt: new Date() };
-    setPoles(prev => [...prev, newPole]);
-  };
-
-  const handleImportPoles = (importedPoles: Pole[]) => {
-    setPoles(prev => [...prev, ...importedPoles]);
+    addPole(newPole);
   };
 
   const toggleStatus = (pole: Pole) => {
@@ -61,7 +56,7 @@ export default function DashboardPoles() {
   const confirmStatusChange = () => {
     if (!statusChangeTarget) return;
     const newStatus: PoleStatus = statusChangeTarget.status === 'FUNCIONANDO' ? 'QUEIMADO' : 'FUNCIONANDO';
-    setPoles(prev => prev.map(p => p.id === statusChangeTarget.id ? { ...p, status: newStatus, updatedAt: new Date() } : p));
+    updatePoleStatus(statusChangeTarget.id, newStatus);
     toast.success(`Status atualizado: ${statusChangeTarget.id}`, {
       description: `Agora está ${newStatus === 'FUNCIONANDO' ? 'consertado' : 'queimado'}.`,
     });
@@ -70,7 +65,7 @@ export default function DashboardPoles() {
 
   const handleDeletePole = () => {
     if (!deleteTarget) return;
-    setPoles(prev => prev.filter(p => p.id !== deleteTarget.id));
+    removePole(deleteTarget.id);
     toast.success(`Poste ${deleteTarget.id} excluído com sucesso.`);
     setDeleteTarget(null);
   };
@@ -261,7 +256,7 @@ export default function DashboardPoles() {
 
       <PoleHistoryDrawer pole={historyPole} open={historyOpen} onOpenChange={setHistoryOpen} />
       <CreatePoleModal open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreatePole} nextId={nextPoleId} existingPoles={poles} />
-      <ImportPolesModal open={importOpen} onOpenChange={setImportOpen} onImport={handleImportPoles} existingPoleIds={poles.map(p => p.id)} />
+      <ImportPolesModal open={importOpen} onOpenChange={setImportOpen} onImport={addPoles} existingPoleIds={poles.map(p => p.id)} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>

@@ -2,8 +2,11 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PoleMap } from '@/components/map/PoleMap';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
+import { usePoles } from '@/contexts/PolesContext';
 
 export default function DashboardMap() {
+  const { poles, updatePoleStatus } = usePoles();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -25,7 +28,12 @@ export default function DashboardMap() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PoleMap showFilters={true} editableStatus={true} />
+            <PoleMap
+              showFilters={true}
+              editableStatus={true}
+              poles={poles}
+              onStatusChange={updatePoleStatus}
+            />
           </CardContent>
         </Card>
       </div>
