@@ -28,7 +28,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
-          <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-14 w-auto object-contain" />
+          <img src={radgovLogo} alt="RAD GOV - Plataforma GovTech" className="h-12 w-auto object-contain" />
           <div className="hidden sm:block">
             <span className="text-lg font-bold text-foreground">IluminaCity</span>
             <span className="block text-[11px] text-muted-foreground">Gestão Inteligente de Iluminação Pública</span>
