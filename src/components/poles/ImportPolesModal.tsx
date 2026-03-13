@@ -71,7 +71,7 @@ export function ImportPolesModal({ open, onOpenChange, onImport, existingPoleIds
       const lng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng ?? '').replace(',', '.'));
       const idPip = String(row[colId ?? ''] ?? '').trim();
       const luminaria = String(row[colLum ?? ''] ?? '').trim();
-      const status: PoleStatus = luminaria.toLowerCase() === 'aberta' ? 'QUEIMADO' : 'FUNCIONANDO';
+      const status: PoleStatus = 'FUNCIONANDO';
 
       const valid = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
       const duplicate = existingPoleIds.includes(idPip);
