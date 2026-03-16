@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PolesProvider } from "@/contexts/PolesContext";
+import { CityHallProvider } from "@/contexts/CityHallContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Complaint from "./pages/Complaint";
