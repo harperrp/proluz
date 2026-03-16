@@ -173,7 +173,7 @@ export default function Dashboard() {
             <CardDescription>Visualização geográfica dos postes por status</CardDescription>
           </CardHeader>
           <CardContent>
-            <PoleMap />
+            <PoleMap center={[activeCityHall.latitude, activeCityHall.longitude]} />
           </CardContent>
         </Card>
 
