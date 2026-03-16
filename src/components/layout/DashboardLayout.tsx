@@ -16,6 +16,7 @@ import {
   Cloud,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCityHall } from '@/contexts/CityHallContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';

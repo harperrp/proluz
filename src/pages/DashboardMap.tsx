@@ -3,14 +3,14 @@ import { PoleMap } from '@/components/map/PoleMap';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
 import { usePoles } from '@/contexts/PolesContext';
-import { MOCK_CITY_HALLS_LIST } from '@/data/mockData';
+import { useCityHall } from '@/contexts/CityHallContext';
 
 export default function DashboardMap() {
   const { poles, updatePoleStatus } = usePoles();
+  const { activeCityHall } = useCityHall();
 
-  // TODO: Replace with active city hall from context when multi-tenancy is live
-  const activeCityHall = MOCK_CITY_HALLS_LIST[0];
   const mapCenter: [number, number] = [activeCityHall.latitude, activeCityHall.longitude];
+  const cityPoles = poles.filter(p => p.cityHallId === activeCityHall.id);
 
   return (
     <DashboardLayout>
@@ -29,14 +29,14 @@ export default function DashboardMap() {
               Mapa Interativo — {activeCityHall.city}
             </CardTitle>
             <CardDescription>
-              Clique em um poste no mapa para localizar com precisão e atualizar o status para arrumado/queimado
+              Clique em um poste no mapa para localizar com precisão e atualizar o status
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PoleMap
               showFilters={true}
               editableStatus={true}
-              poles={poles}
+              poles={cityPoles}
               onStatusChange={updatePoleStatus}
               center={mapCenter}
             />

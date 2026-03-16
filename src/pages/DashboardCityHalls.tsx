@@ -5,19 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search, Plus, MapPin, Users, Lightbulb, MoreHorizontal, LogIn } from 'lucide-react';
+import { Building2, Search, Plus, MapPin, Users, Lightbulb, MoreHorizontal, LogIn, CheckCircle2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MOCK_CITY_HALLS_LIST, CityHallWithStats } from '@/data/mockData';
 import { BRAZILIAN_STATES } from '@/types';
+import { useCityHall } from '@/contexts/CityHallContext';
 import { toast } from 'sonner';
 
 const formatDate = (date: Date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 
 export default function DashboardCityHalls() {
-  const [cityHalls, setCityHalls] = useState<CityHallWithStats[]>(MOCK_CITY_HALLS_LIST);
+  const { cityHalls, activeCityHall, setActiveCityHall, addCityHall, updateCityHall, toggleCityHallStatus } = useCityHall();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Create modal
@@ -29,11 +29,13 @@ export default function DashboardCityHalls() {
 
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
-  const [editCH, setEditCH] = useState<CityHallWithStats | null>(null);
+  const [editId, setEditId] = useState('');
   const [editName, setEditName] = useState('');
   const [editCity, setEditCity] = useState('');
   const [editState, setEditState] = useState('');
   const [editCnpj, setEditCnpj] = useState('');
+  const [editOrigCity, setEditOrigCity] = useState('');
+  const [editOrigState, setEditOrigState] = useState('');
 
   const filteredCityHalls = cityHalls.filter(ch =>
     ch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,7 +53,6 @@ export default function DashboardCityHalls() {
   const handleCreate = async () => {
     if (!newName || !newCity || !newState) { toast.error('Preencha todos os campos obrigatórios.'); return; }
     
-    // Geocode the city
     let latitude = 0, longitude = 0;
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newCity + ', ' + newState + ', Brazil')}&format=json&limit=1`);
@@ -68,43 +69,37 @@ export default function DashboardCityHalls() {
       return;
     }
 
-    const id = String(cityHalls.length + 1);
-    setCityHalls(prev => [...prev, { id, name: newName, city: newCity, state: newState, latitude, longitude, cnpj: newCnpj, status: 'ATIVO' as const, createdAt: new Date(), usersCount: 0, polesCount: 0 }]);
+    const id = String(Date.now());
+    addCityHall({ id, name: newName, city: newCity, state: newState, latitude, longitude, cnpj: newCnpj, status: 'ATIVO', createdAt: new Date(), usersCount: 0, polesCount: 0 });
     toast.success('Prefeitura cadastrada!', { description: `${newCity}/${newState}` });
     setCreateOpen(false);
     setNewName(''); setNewCity(''); setNewState(''); setNewCnpj('');
   };
 
-  const openEdit = (ch: CityHallWithStats) => {
-    setEditCH(ch); setEditName(ch.name); setEditCity(ch.city); setEditState(ch.state); setEditCnpj(ch.cnpj || '');
+  const openEdit = (ch: typeof cityHalls[0]) => {
+    setEditId(ch.id); setEditName(ch.name); setEditCity(ch.city); setEditState(ch.state); setEditCnpj(ch.cnpj || '');
+    setEditOrigCity(ch.city); setEditOrigState(ch.state);
     setEditOpen(true);
   };
 
   const handleEdit = async () => {
-    if (!editCH) return;
-    let latitude = editCH.latitude, longitude = editCH.longitude;
-    
-    // Re-geocode if city or state changed
-    if (editCity !== editCH.city || editState !== editCH.state) {
+    if (!editId) return;
+    let updates: Record<string, any> = { name: editName, city: editCity, state: editState, cnpj: editCnpj };
+
+    if (editCity !== editOrigCity || editState !== editOrigState) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(editCity + ', ' + editState + ', Brazil')}&format=json&limit=1`);
         const data = await res.json();
         if (data.length > 0) {
-          latitude = parseFloat(data[0].lat);
-          longitude = parseFloat(data[0].lon);
+          updates.latitude = parseFloat(data[0].lat);
+          updates.longitude = parseFloat(data[0].lon);
         }
       } catch { /* keep original coords */ }
     }
 
-    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj, latitude, longitude } : ch));
+    updateCityHall(editId, updates);
     toast.success('Prefeitura atualizada!');
     setEditOpen(false);
-  };
-
-  const toggleStatus = (ch: CityHallWithStats) => {
-    const newStatus = ch.status === 'ATIVO' ? 'INATIVO' : 'ATIVO';
-    setCityHalls(prev => prev.map(c => c.id === ch.id ? { ...c, status: newStatus } : c));
-    toast.success(`Prefeitura ${newStatus === 'ATIVO' ? 'ativada' : 'desativada'}.`);
   };
 
   return (
@@ -190,47 +185,63 @@ export default function DashboardCityHalls() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCityHalls.map(ch => (
-                    <TableRow key={ch.id}>
-                      <TableCell className="font-medium">{ch.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          {ch.city}/{ch.state}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{ch.cnpj || '—'}</TableCell>
-                      <TableCell>
-                        <Badge className={ch.status === 'ATIVO' ? 'status-badge-working' : 'bg-muted text-muted-foreground'}>
-                          {ch.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" />{ch.usersCount}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-muted-foreground" />{ch.polesCount}</div>
-                      </TableCell>
-                      <TableCell>{formatDate(ch.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { toast.info(`Acessando ${ch.name}`, { description: `${ch.city}/${ch.state}` }); }}>
-                              <LogIn className="h-4 w-4 mr-2" />
-                              Acessar Prefeitura
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEdit(ch)}>Editar</DropdownMenuItem>
-                            <DropdownMenuItem className={ch.status === 'ATIVO' ? 'text-destructive' : 'text-success'} onClick={() => toggleStatus(ch)}>
-                              {ch.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredCityHalls.map(ch => {
+                    const isActive = activeCityHall.id === ch.id;
+                    return (
+                      <TableRow key={ch.id} className={isActive ? 'bg-primary/5' : ''}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {ch.name}
+                            {isActive && (
+                              <Badge variant="outline" className="border-primary text-primary text-[10px]">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Ativa
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            {ch.city}/{ch.state}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{ch.cnpj || '—'}</TableCell>
+                        <TableCell>
+                          <Badge className={ch.status === 'ATIVO' ? 'status-badge-working' : 'bg-muted text-muted-foreground'}>
+                            {ch.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" />{ch.usersCount}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-muted-foreground" />{ch.polesCount}</div>
+                        </TableCell>
+                        <TableCell>{formatDate(ch.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => setActiveCityHall(ch)}
+                                disabled={isActive}
+                              >
+                                <LogIn className="h-4 w-4 mr-2" />
+                                {isActive ? 'Prefeitura Ativa' : 'Acessar Prefeitura'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEdit(ch)}>Editar</DropdownMenuItem>
+                              <DropdownMenuItem className={ch.status === 'ATIVO' ? 'text-destructive' : 'text-success'} onClick={() => toggleCityHallStatus(ch.id)}>
+                                {ch.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
