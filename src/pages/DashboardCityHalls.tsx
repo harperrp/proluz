@@ -80,9 +80,23 @@ export default function DashboardCityHalls() {
     setEditOpen(true);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!editCH) return;
-    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj } : ch));
+    let latitude = editCH.latitude, longitude = editCH.longitude;
+    
+    // Re-geocode if city or state changed
+    if (editCity !== editCH.city || editState !== editCH.state) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(editCity + ', ' + editState + ', Brazil')}&format=json&limit=1`);
+        const data = await res.json();
+        if (data.length > 0) {
+          latitude = parseFloat(data[0].lat);
+          longitude = parseFloat(data[0].lon);
+        }
+      } catch { /* keep original coords */ }
+    }
+
+    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj, latitude, longitude } : ch));
     toast.success('Prefeitura atualizada!');
     setEditOpen(false);
   };
