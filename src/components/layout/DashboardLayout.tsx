@@ -91,6 +91,7 @@ const roleLabels: Record<UserRole, string> = {
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, hasPermission } = useAuth();
+  const { activeCityHall } = useCityHall();
   const location = useLocation();
   const navigate = useNavigate();
 
