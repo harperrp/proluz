@@ -71,6 +71,8 @@ interface PoleMapProps {
   poleInsights?: Record<string, PoleInsight>;
   route?: RoutePoint[];
   onCancelRoute?: () => void;
+  center?: [number, number];
+  zoom?: number;
 }
 
 function FitRoute({ route }: { route: RoutePoint[] }) {
