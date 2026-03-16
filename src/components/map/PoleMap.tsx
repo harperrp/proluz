@@ -71,6 +71,8 @@ interface PoleMapProps {
   poleInsights?: Record<string, PoleInsight>;
   route?: RoutePoint[];
   onCancelRoute?: () => void;
+  center?: [number, number];
+  zoom?: number;
 }
 
 function FitRoute({ route }: { route: RoutePoint[] }) {
@@ -126,6 +128,8 @@ export function PoleMap({
   poleInsights,
   route,
   onCancelRoute,
+  center = VARGEM_GRANDE_CENTER,
+  zoom = 15,
 }: PoleMapProps) {
   const [internalPoles, setInternalPoles] = useState<Pole[]>(poles ?? MOCK_POLES);
   const [filter, setFilter] = useState<PoleStatus | 'TODOS'>(defaultFilter);
@@ -244,7 +248,7 @@ export function PoleMap({
         )}
         style={isFullscreen ? undefined : { height: '500px' }}
       >
-        <MapContainer center={VARGEM_GRANDE_CENTER} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom ref={mapRef}>
+        <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} scrollWheelZoom ref={mapRef}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

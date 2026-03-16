@@ -48,10 +48,28 @@ export default function DashboardCityHalls() {
     return nums.replace(/(\d{2})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d)/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName || !newCity || !newState) { toast.error('Preencha todos os campos obrigatórios.'); return; }
+    
+    // Geocode the city
+    let latitude = 0, longitude = 0;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newCity + ', ' + newState + ', Brazil')}&format=json&limit=1`);
+      const data = await res.json();
+      if (data.length > 0) {
+        latitude = parseFloat(data[0].lat);
+        longitude = parseFloat(data[0].lon);
+      } else {
+        toast.error('Não foi possível encontrar as coordenadas da cidade. Verifique o nome.');
+        return;
+      }
+    } catch {
+      toast.error('Erro ao buscar localização da cidade.');
+      return;
+    }
+
     const id = String(cityHalls.length + 1);
-    setCityHalls(prev => [...prev, { id, name: newName, city: newCity, state: newState, cnpj: newCnpj, status: 'ATIVO', createdAt: new Date(), usersCount: 0, polesCount: 0 }]);
+    setCityHalls(prev => [...prev, { id, name: newName, city: newCity, state: newState, latitude, longitude, cnpj: newCnpj, status: 'ATIVO' as const, createdAt: new Date(), usersCount: 0, polesCount: 0 }]);
     toast.success('Prefeitura cadastrada!', { description: `${newCity}/${newState}` });
     setCreateOpen(false);
     setNewName(''); setNewCity(''); setNewState(''); setNewCnpj('');
@@ -62,9 +80,23 @@ export default function DashboardCityHalls() {
     setEditOpen(true);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!editCH) return;
-    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj } : ch));
+    let latitude = editCH.latitude, longitude = editCH.longitude;
+    
+    // Re-geocode if city or state changed
+    if (editCity !== editCH.city || editState !== editCH.state) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(editCity + ', ' + editState + ', Brazil')}&format=json&limit=1`);
+        const data = await res.json();
+        if (data.length > 0) {
+          latitude = parseFloat(data[0].lat);
+          longitude = parseFloat(data[0].lon);
+        }
+      } catch { /* keep original coords */ }
+    }
+
+    setCityHalls(prev => prev.map(ch => ch.id === editCH.id ? { ...ch, name: editName, city: editCity, state: editState, cnpj: editCnpj, latitude, longitude } : ch));
     toast.success('Prefeitura atualizada!');
     setEditOpen(false);
   };

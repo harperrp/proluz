@@ -19,6 +19,8 @@ export interface CityHall {
   name: string;
   city: string;
   state: string;
+  latitude: number;
+  longitude: number;
   createdAt: Date;
 }
 

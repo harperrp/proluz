@@ -140,8 +140,8 @@ export interface CityHallWithStats extends CityHall {
 }
 
 export const MOCK_CITY_HALLS_LIST: CityHallWithStats[] = [
-  { id: '1', name: 'Prefeitura de Vargem Grande do Rio Pardo', city: 'Vargem Grande do Rio Pardo', state: 'MG', cnpj: '12.345.678/0001-01', status: 'ATIVO', createdAt: new Date('2023-01-10'), usersCount: 5, polesCount: 8 },
-  { id: '2', name: 'Prefeitura de Campinas', city: 'Campinas', state: 'SP', cnpj: '23.456.789/0001-02', status: 'ATIVO', createdAt: new Date('2023-03-15'), usersCount: 8, polesCount: 450 },
-  { id: '3', name: 'Prefeitura de Santos', city: 'Santos', state: 'SP', cnpj: '34.567.890/0001-03', status: 'ATIVO', createdAt: new Date('2023-05-20'), usersCount: 6, polesCount: 320 },
-  { id: '4', name: 'Prefeitura de Sorocaba', city: 'Sorocaba', state: 'SP', cnpj: '45.678.901/0001-04', status: 'INATIVO', createdAt: new Date('2023-07-12'), usersCount: 5, polesCount: 280 },
+  { id: '1', name: 'Prefeitura de Vargem Grande do Rio Pardo', city: 'Vargem Grande do Rio Pardo', state: 'MG', latitude: -15.3983, longitude: -42.3097, cnpj: '12.345.678/0001-01', status: 'ATIVO', createdAt: new Date('2023-01-10'), usersCount: 5, polesCount: 8 },
+  { id: '2', name: 'Prefeitura de Campinas', city: 'Campinas', state: 'SP', latitude: -22.9099, longitude: -47.0626, cnpj: '23.456.789/0001-02', status: 'ATIVO', createdAt: new Date('2023-03-15'), usersCount: 8, polesCount: 450 },
+  { id: '3', name: 'Prefeitura de Santos', city: 'Santos', state: 'SP', latitude: -23.9608, longitude: -46.3336, cnpj: '34.567.890/0001-03', status: 'ATIVO', createdAt: new Date('2023-05-20'), usersCount: 6, polesCount: 320 },
+  { id: '4', name: 'Prefeitura de Sorocaba', city: 'Sorocaba', state: 'SP', latitude: -23.5015, longitude: -47.4526, cnpj: '45.678.901/0001-04', status: 'INATIVO', createdAt: new Date('2023-07-12'), usersCount: 5, polesCount: 280 },
 ];
