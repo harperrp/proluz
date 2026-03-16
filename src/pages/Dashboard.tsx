@@ -10,6 +10,7 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { PoleMap } from '@/components/map/PoleMap';
 import { ComplaintsList } from '@/components/dashboard/ComplaintsList';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCityHall } from '@/contexts/CityHallContext';
 import {
   Card,
   CardContent,
