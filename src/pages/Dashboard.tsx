@@ -47,6 +47,7 @@ const monthlyData = [
 
 export default function Dashboard() {
   const { user, hasPermission } = useAuth();
+  const { activeCityHall } = useCityHall();
   
   const canViewComplaints = hasPermission(['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY']);
   const canViewFullStats = hasPermission(['ADMIN', 'CITY_HALL_ADMIN']);
