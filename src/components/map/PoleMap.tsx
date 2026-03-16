@@ -248,7 +248,7 @@ export function PoleMap({
         )}
         style={isFullscreen ? undefined : { height: '500px' }}
       >
-        <MapContainer center={VARGEM_GRANDE_CENTER} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom ref={mapRef}>
+        <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }} scrollWheelZoom ref={mapRef}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
