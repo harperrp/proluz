@@ -16,6 +16,7 @@ import {
   Cloud,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCityHall } from '@/contexts/CityHallContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
@@ -90,6 +91,7 @@ const roleLabels: Record<UserRole, string> = {
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, hasPermission } = useAuth();
+  const { activeCityHall } = useCityHall();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -145,6 +147,16 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             </div>
+
+            {/* Active City Hall */}
+            {hasPermission(['ADMIN']) && (
+              <div className="border-b border-sidebar-border/50 px-5 py-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Building2 className="h-3.5 w-3.5 text-primary" />
+                  <span className="truncate font-medium text-sidebar-foreground">{activeCityHall.city}/{activeCityHall.state}</span>
+                </div>
+              </div>
+            )}
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-4 py-5">

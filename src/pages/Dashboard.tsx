@@ -10,6 +10,7 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { PoleMap } from '@/components/map/PoleMap';
 import { ComplaintsList } from '@/components/dashboard/ComplaintsList';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCityHall } from '@/contexts/CityHallContext';
 import {
   Card,
   CardContent,
@@ -46,6 +47,7 @@ const monthlyData = [
 
 export default function Dashboard() {
   const { user, hasPermission } = useAuth();
+  const { activeCityHall } = useCityHall();
   
   const canViewComplaints = hasPermission(['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY']);
   const canViewFullStats = hasPermission(['ADMIN', 'CITY_HALL_ADMIN']);
@@ -171,7 +173,7 @@ export default function Dashboard() {
             <CardDescription>Visualização geográfica dos postes por status</CardDescription>
           </CardHeader>
           <CardContent>
-            <PoleMap />
+            <PoleMap center={[activeCityHall.latitude, activeCityHall.longitude]} />
           </CardContent>
         </Card>
 
