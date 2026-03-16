@@ -128,6 +128,8 @@ export function PoleMap({
   poleInsights,
   route,
   onCancelRoute,
+  center = VARGEM_GRANDE_CENTER,
+  zoom = 15,
 }: PoleMapProps) {
   const [internalPoles, setInternalPoles] = useState<Pole[]>(poles ?? MOCK_POLES);
   const [filter, setFilter] = useState<PoleStatus | 'TODOS'>(defaultFilter);
