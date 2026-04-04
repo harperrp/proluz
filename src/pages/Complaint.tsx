@@ -29,12 +29,12 @@ export default function Complaint() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header com logo grande e visível */}
-      <header className="w-full border-b border-border/20 bg-gradient-to-r from-card via-card/95 to-card py-5">
-        <div className="container flex flex-col items-center gap-2">
-          <img src={radgovLogo} alt="RAD GOV" className="h-16 w-auto object-contain drop-shadow-lg" />
-          <div className="text-center">
-            <span className="text-xl font-bold text-foreground tracking-wide">IluminaCity</span>
-            <span className="block text-xs text-primary font-medium tracking-widest uppercase">Portal do Cidadão</span>
+      <header className="w-full border-b border-border/30 bg-card/95 backdrop-blur-md py-6 lg:py-8">
+        <div className="container flex flex-col items-center gap-3">
+          <img src={radgovLogo} alt="RAD GOV" className="h-24 lg:h-28 w-auto object-contain drop-shadow-[0_4px_20px_hsl(var(--primary)/0.3)]" />
+          <div className="text-center space-y-0.5">
+            <span className="text-2xl lg:text-3xl font-bold text-foreground tracking-wide">IluminaCity</span>
+            <span className="block text-xs text-primary font-semibold tracking-[0.25em] uppercase">Portal do Cidadão</span>
           </div>
         </div>
       </header>
@@ -93,15 +93,16 @@ export default function Complaint() {
       </main>
 
       {/* Footer profissional com logo grande */}
-      <footer className="border-t border-border/20 bg-gradient-to-t from-card/80 to-transparent py-8">
-        <div className="container flex flex-col items-center gap-4">
-          <img src={radgovLogo} alt="RAD GOV" className="h-14 w-auto object-contain drop-shadow-md" />
-          <div className="text-center space-y-1">
+      <footer className="border-t border-border/30 bg-card/60 backdrop-blur-sm py-10">
+        <div className="container flex flex-col items-center gap-5">
+          <img src={radgovLogo} alt="RAD GOV" className="h-20 lg:h-24 w-auto object-contain drop-shadow-[0_4px_20px_hsl(var(--primary)/0.25)]" />
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <div className="text-center space-y-1.5">
             <p className="text-sm text-muted-foreground">
               Plataforma desenvolvida por <span className="text-primary font-semibold">RAD Tecnologia</span>
             </p>
-            <p className="text-[11px] text-muted-foreground/60">
-              Infraestrutura AWS · Todos os direitos reservados
+            <p className="text-[11px] text-muted-foreground/50">
+              Infraestrutura AWS · Todos os direitos reservados · {new Date().getFullYear()}
             </p>
           </div>
         </div>
