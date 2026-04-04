@@ -150,30 +150,59 @@ export function ComplaintForm() {
 
   if (isSubmitted) {
     return (
-      <div className="text-center py-16 space-y-6 animate-fade-in">
-        <div className="flex justify-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mx-auto">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-200 to-emerald-200 dark:from-green-800/40 dark:to-emerald-800/40">
-              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+      <div className="text-center py-12 space-y-8 animate-fade-in">
+        {/* Animated success icon */}
+        <div className="relative flex justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-32 w-32 rounded-full bg-success/5 animate-[ping_2s_ease-in-out_1]" />
+          </div>
+          <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-success/20 to-success/5 border border-success/20 mx-auto shadow-lg shadow-success/10">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-success/30 to-success/10 border border-success/30">
+              <CheckCircle className="h-10 w-10 text-success animate-scale-in" />
             </div>
           </div>
+          {/* Sparkle decorations */}
+          <Sparkles className="absolute top-0 right-1/3 h-5 w-5 text-accent animate-pulse" />
+          <Sparkles className="absolute bottom-2 left-1/3 h-4 w-4 text-primary animate-pulse delay-300" />
         </div>
-        <div className="space-y-3">
-          <h3 className="text-2xl font-bold">Denúncia Registrada com Sucesso!</h3>
-          <p className="text-muted-foreground max-w-md mx-auto text-base leading-relaxed">
-            Sua denúncia para o poste <strong className="text-foreground">{selectedPole?.id}</strong>
-            {selectedPole?.address && <> na <strong className="text-foreground">{selectedPole.address}</strong></>}
-            {' '}foi registrada com sucesso. Nossa equipe irá analisar e tomar as providências necessárias.
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Agradecemos por ajudar a manter nossa cidade mais segura e iluminada!
-          </p>
+
+        {/* Success message */}
+        <div className="space-y-4">
+          <h3 className="text-2xl lg:text-3xl font-bold text-foreground">
+            Denúncia Registrada!
+          </h3>
+          <div className="max-w-md mx-auto space-y-3">
+            <div className="rounded-xl bg-success/5 border border-success/15 p-4">
+              <p className="text-sm text-foreground leading-relaxed">
+                Poste <strong className="text-primary">{selectedPole?.id}</strong>
+                {selectedPole?.address && <> — <strong className="text-primary">{selectedPole.address}</strong></>}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Protocolo registrado com sucesso
+              </p>
+            </div>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Nossa equipe irá analisar e tomar as providências necessárias.
+              Agradecemos por ajudar a manter nossa cidade mais segura e iluminada!
+            </p>
+          </div>
         </div>
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Heart className="h-4 w-4 text-red-400 animate-pulse" />
-          <span>Obrigado por contribuir com a comunidade</span>
+
+        {/* Gratitude with branding */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Heart className="h-4 w-4 text-destructive animate-pulse" />
+            <span>Obrigado por contribuir com a comunidade</span>
+            <Heart className="h-4 w-4 text-destructive animate-pulse" />
+          </div>
+
+          <div className="flex items-center justify-center gap-2 opacity-50">
+            <img src={radgovLogo} alt="RAD GOV" className="h-6 w-auto object-contain" />
+          </div>
         </div>
-        <Button onClick={handleReset} variant="outline" size="lg" className="mt-2">
+
+        <Button onClick={handleReset} variant="outline" size="lg" className="mt-4 gap-2">
+          <Send className="h-4 w-4" />
           Fazer Nova Denúncia
         </Button>
       </div>
