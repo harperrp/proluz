@@ -29,12 +29,12 @@ export default function Complaint() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header com logo grande e visível */}
-      <header className="w-full border-b border-border/20 bg-gradient-to-r from-card via-card/95 to-card py-5">
-        <div className="container flex flex-col items-center gap-2">
-          <img src={radgovLogo} alt="RAD GOV" className="h-16 w-auto object-contain drop-shadow-lg" />
-          <div className="text-center">
-            <span className="text-xl font-bold text-foreground tracking-wide">IluminaCity</span>
-            <span className="block text-xs text-primary font-medium tracking-widest uppercase">Portal do Cidadão</span>
+      <header className="w-full border-b border-border/30 bg-card/95 backdrop-blur-md py-6 lg:py-8">
+        <div className="container flex flex-col items-center gap-3">
+          <img src={radgovLogo} alt="RAD GOV" className="h-24 lg:h-28 w-auto object-contain drop-shadow-[0_4px_20px_hsl(var(--primary)/0.3)]" />
+          <div className="text-center space-y-0.5">
+            <span className="text-2xl lg:text-3xl font-bold text-foreground tracking-wide">IluminaCity</span>
+            <span className="block text-xs text-primary font-semibold tracking-[0.25em] uppercase">Portal do Cidadão</span>
           </div>
         </div>
       </header>
