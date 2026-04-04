@@ -196,8 +196,8 @@ export function ComplaintForm() {
             <Heart className="h-4 w-4 text-destructive animate-pulse" />
           </div>
 
-          <div className="flex items-center justify-center gap-2 opacity-50">
-            <img src={radgovLogo} alt="RAD GOV" className="h-6 w-auto object-contain" />
+        <div className="flex items-center justify-center">
+            <img src={radgovLogo} alt="RAD GOV" className="h-12 w-auto object-contain drop-shadow-md" />
           </div>
         </div>
 
