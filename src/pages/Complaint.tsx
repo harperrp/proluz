@@ -1,5 +1,5 @@
 import { ComplaintForm } from '@/components/forms/ComplaintForm';
-import { AlertTriangle, Shield, Clock, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Shield, Clock, CheckCircle, Zap } from 'lucide-react';
 import radgovLogo from '@/assets/radgov-logo.png';
 
 const steps = [
@@ -28,15 +28,13 @@ const steps = [
 export default function Complaint() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Branded Header for Citizen Portal */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-card/80 backdrop-blur-xl">
-        <div className="container flex h-16 items-center justify-center">
-          <div className="flex items-center gap-3">
-            <img src={radgovLogo} alt="RAD GOV" className="h-10 w-auto object-contain" />
-            <div className="hidden sm:block">
-              <span className="text-lg font-bold text-foreground">IluminaCity</span>
-              <span className="block text-[11px] text-muted-foreground">Portal do Cidadão</span>
-            </div>
+      {/* Header com logo grande e visível */}
+      <header className="w-full border-b border-border/20 bg-gradient-to-r from-card via-card/95 to-card py-5">
+        <div className="container flex flex-col items-center gap-2">
+          <img src={radgovLogo} alt="RAD GOV" className="h-16 w-auto object-contain drop-shadow-lg" />
+          <div className="text-center">
+            <span className="text-xl font-bold text-foreground tracking-wide">IluminaCity</span>
+            <span className="block text-xs text-primary font-medium tracking-widest uppercase">Portal do Cidadão</span>
           </div>
         </div>
       </header>
@@ -49,7 +47,7 @@ export default function Complaint() {
           <div className="container relative">
             <div className="max-w-2xl space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-sm text-primary">
-                <AlertTriangle className="h-3.5 w-3.5" />
+                <Zap className="h-3.5 w-3.5" />
                 Portal de Denúncias
               </div>
               <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
@@ -94,13 +92,18 @@ export default function Complaint() {
         </section>
       </main>
 
-      {/* Branded Footer */}
-      <footer className="border-t border-border/30 bg-card/50 py-6">
-        <div className="container flex flex-col items-center gap-3">
-          <img src={radgovLogo} alt="RAD GOV" className="h-8 w-auto object-contain opacity-60" />
-          <p className="text-xs text-muted-foreground text-center">
-            Plataforma desenvolvida por <span className="text-primary font-medium">RAD Tecnologia</span> · Infraestrutura AWS
-          </p>
+      {/* Footer profissional com logo grande */}
+      <footer className="border-t border-border/20 bg-gradient-to-t from-card/80 to-transparent py-8">
+        <div className="container flex flex-col items-center gap-4">
+          <img src={radgovLogo} alt="RAD GOV" className="h-14 w-auto object-contain drop-shadow-md" />
+          <div className="text-center space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Plataforma desenvolvida por <span className="text-primary font-semibold">RAD Tecnologia</span>
+            </p>
+            <p className="text-[11px] text-muted-foreground/60">
+              Infraestrutura AWS · Todos os direitos reservados
+            </p>
+          </div>
         </div>
       </footer>
     </div>
