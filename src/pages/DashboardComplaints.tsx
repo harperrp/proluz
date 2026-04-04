@@ -3,7 +3,7 @@ import { ComplaintsList } from '@/components/dashboard/ComplaintsList';
 import { BannedCpfsList, BannedCpfEntry } from '@/components/dashboard/BannedCpfsList';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Ban, Filter } from 'lucide-react';
+import { AlertTriangle, Ban, Filter, Copy, ExternalLink } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
