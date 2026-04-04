@@ -3,7 +3,7 @@ import { ComplaintsList } from '@/components/dashboard/ComplaintsList';
 import { BannedCpfsList, BannedCpfEntry } from '@/components/dashboard/BannedCpfsList';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Ban, Filter } from 'lucide-react';
+import { AlertTriangle, Ban, Filter, Copy, ExternalLink } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -51,6 +52,32 @@ export default function DashboardComplaints() {
             <p className="text-muted-foreground">
               Gerencie as denúncias recebidas dos cidadãos
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                const url = `${window.location.origin}/denuncia`;
+                navigator.clipboard.writeText(url);
+                toast.success('Link copiado!', {
+                  description: 'Envie este link para os cidadãos fazerem denúncias.',
+                });
+              }}
+            >
+              <Copy className="h-4 w-4" />
+              Copiar Link de Denúncia
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => window.open('/denuncia', '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              Visualizar
+            </Button>
           </div>
         </div>
 
