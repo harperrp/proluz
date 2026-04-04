@@ -37,8 +37,6 @@ export default function Complaint() {
             backgroundSize: '60px 60px',
           }}
         />
-        {/* Scanning line */}
-        <div className="absolute inset-x-0 h-32 bg-gradient-to-b from-primary/5 to-transparent animate-grid-scan" />
       </div>
 
       {/* Floating orbs */}
