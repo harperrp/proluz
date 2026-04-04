@@ -28,39 +28,39 @@ const steps = [
 export default function Complaint() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Header com logo grande e visível */}
-      <header className="w-full border-b border-border/30 bg-card/95 backdrop-blur-md py-6 lg:py-8">
-        <div className="container flex flex-col items-center gap-3">
-          <img src={radgovLogo} alt="RAD GOV" className="h-24 lg:h-28 w-auto object-contain drop-shadow-[0_4px_20px_hsl(var(--primary)/0.3)]" />
-          <div className="text-center space-y-0.5">
-            <span className="text-2xl lg:text-3xl font-bold text-foreground tracking-wide">IluminaCity</span>
-            <span className="block text-xs text-primary font-semibold tracking-[0.25em] uppercase">Portal do Cidadão</span>
-          </div>
-        </div>
-      </header>
-      
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden py-12 lg:py-16">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/10" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_60%)]" />
-          <div className="container relative">
-            <div className="max-w-2xl space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-sm text-primary">
-                <Zap className="h-3.5 w-3.5" />
-                Portal de Denúncias
+      {/* Combined Header + Hero */}
+      <section className="relative overflow-hidden border-b border-border/20">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-background to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.12),transparent_70%)]" />
+        
+        <div className="container relative py-10 lg:py-14">
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Logo + Brand */}
+            <div className="flex flex-col items-center gap-2">
+              <img src={radgovLogo} alt="RAD GOV" className="h-20 lg:h-24 w-auto object-contain drop-shadow-[0_0_30px_hsl(var(--primary)/0.3)]" />
+              <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] uppercase text-primary/70">
+                <span className="h-px w-6 bg-primary/30" />
+                IluminaCity
+                <span className="h-px w-6 bg-primary/30" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
+            </div>
+
+            {/* Title */}
+            <div className="max-w-xl space-y-3">
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground leading-tight">
                 Reporte um Problema de{' '}
-                <span className="text-primary">Iluminação Pública</span>
+                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Iluminação Pública
+                </span>
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-muted-foreground text-sm lg:text-base leading-relaxed">
                 Ajude a manter sua cidade iluminada. Informe postes com problemas 
                 e acompanhe a resolução.
               </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* Steps */}
         <section className="py-8 border-b border-border/30 bg-card/30">
