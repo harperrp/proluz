@@ -62,35 +62,34 @@ export default function Complaint() {
         </div>
       </section>
 
-        {/* Steps */}
-        <section className="py-8 border-b border-border/30 bg-card/30">
-          <div className="container">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {steps.map((step, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/30">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
-                    {step.icon}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-foreground">{step.title}</p>
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
-                  </div>
+      {/* Steps */}
+      <section className="py-8 border-b border-border/30 bg-card/30">
+        <div className="container">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {steps.map((step, index) => (
+              <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/30">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  {step.icon}
                 </div>
-              ))}
-            </div>
+                <div>
+                  <p className="font-medium text-sm text-foreground">{step.title}</p>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Form */}
-        <section className="py-12 lg:py-16">
-          <div className="container max-w-3xl">
-            <div className="rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm p-6 lg:p-8 shadow-xl shadow-primary/5">
-              <h2 className="text-xl font-semibold mb-6 text-foreground">Formulário de Denúncia</h2>
-              <ComplaintForm />
-            </div>
+      {/* Form */}
+      <section className="flex-1 py-12 lg:py-16">
+        <div className="container max-w-3xl">
+          <div className="rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm p-6 lg:p-8 shadow-xl shadow-primary/5">
+            <h2 className="text-xl font-semibold mb-6 text-foreground">Formulário de Denúncia</h2>
+            <ComplaintForm />
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
       {/* Footer profissional com logo grande */}
       <footer className="border-t border-border/30 bg-card/60 backdrop-blur-sm py-10">
