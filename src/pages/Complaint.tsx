@@ -102,15 +102,6 @@ export default function Complaint() {
               </p>
             </div>
 
-            {/* Tech badges */}
-            <div className="flex flex-wrap items-center justify-center gap-3 animate-stagger-in" style={{ animationDelay: '0.45s' }}>
-              {['Infraestrutura AWS', 'LGPD Compliant', '99.9% Uptime'].map((badge, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-medium tracking-wide">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  {badge}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
