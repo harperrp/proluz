@@ -1,5 +1,5 @@
 import { ComplaintForm } from '@/components/forms/ComplaintForm';
-import { AlertTriangle, Shield, Clock, CheckCircle, Zap } from 'lucide-react';
+import { AlertTriangle, Shield, Clock, CheckCircle } from 'lucide-react';
 import radgovLogo from '@/assets/radgov-logo.png';
 
 const steps = [
