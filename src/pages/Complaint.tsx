@@ -37,8 +37,6 @@ export default function Complaint() {
             backgroundSize: '60px 60px',
           }}
         />
-        {/* Scanning line */}
-        <div className="absolute inset-x-0 h-32 bg-gradient-to-b from-primary/5 to-transparent animate-grid-scan" />
       </div>
 
       {/* Floating orbs */}
@@ -104,15 +102,6 @@ export default function Complaint() {
               </p>
             </div>
 
-            {/* Tech badges */}
-            <div className="flex flex-wrap items-center justify-center gap-3 animate-stagger-in" style={{ animationDelay: '0.45s' }}>
-              {['Infraestrutura AWS', 'LGPD Compliant', '99.9% Uptime'].map((badge, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-medium tracking-wide">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  {badge}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
