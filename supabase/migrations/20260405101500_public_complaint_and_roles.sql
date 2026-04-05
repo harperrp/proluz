@@ -4,8 +4,7 @@
 DROP POLICY IF EXISTS city_halls_select ON public.city_halls;
 CREATE POLICY city_halls_select ON public.city_halls
 FOR SELECT USING (
-  status = 'ATIVO'
-  OR public.is_admin_master()
+  public.is_admin_master()
   OR EXISTS (
     SELECT 1
     FROM public.user_city_halls uch
@@ -16,10 +15,7 @@ FOR SELECT USING (
 
 DROP POLICY IF EXISTS city_halls_public_active_select ON public.city_halls;
 CREATE POLICY city_halls_public_active_select ON public.city_halls
- codex/finalize-public-report-and-access-separation-v9qc6r
 TO anon
-
- main
 FOR SELECT USING (status = 'ATIVO');
 
 -- Lighting points: allow public map access only for active city halls
@@ -31,10 +27,7 @@ FOR SELECT USING (
 
 DROP POLICY IF EXISTS poles_select_public_active_city_hall ON public.lighting_points;
 CREATE POLICY poles_select_public_active_city_hall ON public.lighting_points
- codex/finalize-public-report-and-access-separation-v9qc6r
 TO anon
-
- main
 FOR SELECT USING (
   EXISTS (
     SELECT 1
@@ -47,10 +40,7 @@ FOR SELECT USING (
 -- Public complaint insert must be pending and linked to a valid city hall + pole
 DROP POLICY IF EXISTS complaints_insert_public ON public.complaints;
 CREATE POLICY complaints_insert_public ON public.complaints
- codex/finalize-public-report-and-access-separation-v9qc6r
 TO anon
-
- main
 FOR INSERT WITH CHECK (
   status = 'PENDENTE'
   AND lighting_point_code IS NOT NULL
