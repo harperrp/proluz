@@ -9,37 +9,23 @@ export default function DashboardMap() {
   const { poles, updatePoleStatus } = usePoles();
   const { activeCityHall } = useCityHall();
 
-  const mapCenter: [number, number] = [activeCityHall.latitude, activeCityHall.longitude];
-  const cityPoles = poles.filter(p => p.cityHallId === activeCityHall.id);
+  const cityPoles = activeCityHall ? poles.filter((p) => p.cityHallId === activeCityHall.id) : poles;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Mapa de Postes</h1>
-          <p className="text-muted-foreground">
-            Visualize a localização e status dos postes de {activeCityHall.city}
-          </p>
+          <p className="text-muted-foreground">Visualização geográfica em dados reais</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Mapa Interativo — {activeCityHall.city}
-            </CardTitle>
-            <CardDescription>
-              Clique em um poste no mapa para localizar com precisão e atualizar o status
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" />Mapa Interativo</CardTitle>
+            <CardDescription>Clique no poste para alterar status</CardDescription>
           </CardHeader>
           <CardContent>
-            <PoleMap
-              showFilters={true}
-              editableStatus={true}
-              poles={cityPoles}
-              onStatusChange={updatePoleStatus}
-              center={mapCenter}
-            />
+            <PoleMap showFilters editableStatus poles={cityPoles} onStatusChange={(id, status) => void updatePoleStatus(id, status)} center={activeCityHall ? [activeCityHall.latitude, activeCityHall.longitude] : undefined} />
           </CardContent>
         </Card>
       </div>
