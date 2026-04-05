@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { dbInsert, dbPatch, dbSelect } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const statusConfig: Record<ComplaintStatus, { label: string; className: string; icon: typeof AlertCircle }> = {
   PENDENTE: { label: 'Pendente', className: 'status-badge-pending', icon: AlertCircle },
@@ -51,12 +52,14 @@ const mapRow = (r: ComplaintRow): Complaint => ({
 });
 
 export function ComplaintsList() {
+  const { user } = useAuth();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [action, setAction] = useState<'view' | 'approve' | 'reject'>('view');
   const [rejectionReason, setRejectionReason] = useState('');
   const [observations, setObservations] = useState('');
+  const canModerateComplaints = user?.role === 'ADMIN' || user?.role === 'SECRETARY';
 
   const load = async () => {
     const rows = await dbSelect<ComplaintRow>('complaints?select=*&order=created_at.desc');
@@ -190,7 +193,7 @@ export function ComplaintsList() {
                 <Button variant="ghost" size="sm" onClick={() => handleAction(complaint, 'view')}>
                   <Eye className="h-4 w-4" />
                 </Button>
-                {complaint.status === 'PENDENTE' && (
+                {complaint.status === 'PENDENTE' && canModerateComplaints && (
                   <>
                     <Button variant="success" size="sm" onClick={() => handleAction(complaint, 'approve')}>
                       Aprovar
