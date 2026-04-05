@@ -5,6 +5,7 @@ import { dbSelect, getValidSession, signInWithPassword, signOut } from '@/lib/su
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   hasPermission: (roles: UserRole[]) => boolean;
@@ -32,11 +33,13 @@ const mapProfileToUser = (profile: ProfileRow, email: string): User => ({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
     const session = await getValidSession();
     if (!session?.user?.id) {
       setUser(null);
+      setIsLoading(false);
       return;
     }
 
@@ -46,12 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       if (!rows[0]) {
         setUser(null);
-        return;
+      } else {
+        setUser(mapProfileToUser(rows[0], session.user.email ?? ''));
       }
-      setUser(mapProfileToUser(rows[0], session.user.email ?? ''));
     } catch {
       setUser(null);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -82,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        isLoading,
         login,
         logout,
         hasPermission,
