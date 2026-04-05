@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,36 +15,54 @@ const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
+
 type LoginFormData = z.infer<typeof loginSchema>;
+
+interface LocationState {
+  from?: string;
+}
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    setIsSubmitting(true);
     const success = await login(data.email, data.password);
-    setIsLoading(false);
+    setIsSubmitting(false);
+
     if (success) {
       toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
-    } else {
-      toast.error('Credenciais inválidas.');
+      const state = location.state as LocationState | null;
+      const target = state?.from && state.from.startsWith('/dashboard') ? state.from : '/dashboard';
+      navigate(target, { replace: true });
+      return;
     }
+
+    toast.error('Credenciais inválidas.');
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8">
-          {/* Branding */}
           <div className="text-center">
             <Link to="/" className="inline-flex items-center gap-3 mb-6">
               <img src={radgovLogo} alt="RAD GOV" className="h-12" />
@@ -54,15 +72,10 @@ export default function Login() {
             <p className="text-muted-foreground mt-1">Acesse o sistema de gestão de iluminação pública</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <Label>E-mail</Label>
-              <Input
-                type="email"
-                placeholder="seu@email.gov.br"
-                {...register('email')}
-              />
+              <Input type="email" placeholder="seu@email.gov.br" {...register('email')} />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
@@ -86,16 +99,20 @@ export default function Login() {
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
-            <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
-              {isLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Entrando...</>
+            <Button type="submit" className="w-full h-11 text-base" disabled={isSubmitting || isLoading}>
+              {isSubmitting || isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Entrando...
+                </>
               ) : (
-                <>Entrar no Sistema <ArrowRight className="ml-2 h-4 w-4" /></>
+                <>
+                  Entrar no Sistema <ArrowRight className="ml-2 h-4 w-4" />
+                </>
               )}
             </Button>
           </form>
 
-          {/* Citizen link */}
           <p className="text-center text-sm text-muted-foreground">
             É cidadão?{' '}
             <Link to="/denuncia" className="text-primary hover:underline font-medium">
@@ -105,13 +122,15 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right - Hero panel */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-card via-background to-card items-center justify-center p-12 relative overflow-hidden">
-        {/* Subtle grid */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
+        />
 
         <div className="relative z-10 text-center max-w-lg space-y-8">
           <img src={radgovLogo} alt="RAD GOV" className="h-16 mx-auto" />
@@ -121,14 +140,17 @@ export default function Login() {
           </div>
 
           <div>
-            <h2 className="text-3xl font-bold mb-3">Gestão Inteligente de<br />Iluminação Pública</h2>
+            <h2 className="text-3xl font-bold mb-3">
+              Gestão Inteligente de
+              <br />
+              Iluminação Pública
+            </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Transforme a forma como sua prefeitura gerencia a iluminação pública.
-              Reduza custos, melhore o tempo de resposta e aumente a satisfação dos cidadãos.
+              Transforme a forma como sua prefeitura gerencia a iluminação pública. Reduza custos, melhore o tempo de
+              resposta e aumente a satisfação dos cidadãos.
             </p>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             {[
               { value: '60%', label: 'Mais rápido' },
@@ -142,7 +164,6 @@ export default function Login() {
             ))}
           </div>
 
-          {/* Features */}
           <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
             {['LGPD Compliance', 'Multi-tenant', 'Suporte 24/7'].map((feat) => (
               <span key={feat} className="flex items-center gap-1.5">

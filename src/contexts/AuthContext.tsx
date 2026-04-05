@@ -60,14 +60,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshUser();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshUser();
+      }
+    };
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'sb_session') {
+        void refreshUser();
+      }
+    };
+
+    window.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('storage', onStorage);
+    };
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
     try {
       await signInWithPassword(email, password);
       await refreshUser();
       return true;
     } catch {
+      setIsLoading(false);
       return false;
     }
   }, [refreshUser]);
