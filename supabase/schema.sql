@@ -1,34 +1,6 @@
 -- Extensions
 create extension if not exists pgcrypto;
 
--- Limpeza segura das policies antigas
-drop policy if exists city_halls_select on public.city_halls;
-drop policy if exists city_halls_admin_manage on public.city_halls;
-
-drop policy if exists profiles_select on public.profiles;
-drop policy if exists profiles_update_self on public.profiles;
-drop policy if exists profiles_insert_admin on public.profiles;
-
-drop policy if exists uch_select on public.user_city_halls;
-drop policy if exists uch_manage_admin on public.user_city_halls;
-
-drop policy if exists poles_select on public.lighting_points;
-drop policy if exists poles_insert_manage on public.lighting_points;
-drop policy if exists poles_update_manage on public.lighting_points;
-drop policy if exists poles_delete_manage on public.lighting_points;
-
-drop policy if exists complaints_select_internal on public.complaints;
-drop policy if exists complaints_insert_public on public.complaints;
-drop policy if exists complaints_update_internal on public.complaints;
-
-drop policy if exists maintenance_select_internal on public.maintenance_orders;
-drop policy if exists maintenance_insert_internal on public.maintenance_orders;
-drop policy if exists maintenance_update_internal on public.maintenance_orders;
-drop policy if exists maintenance_delete_internal on public.maintenance_orders;
-
-drop policy if exists logs_select_internal on public.activity_logs;
-drop policy if exists logs_insert_internal on public.activity_logs;
-
 -- Enums
 do $$
 begin
@@ -150,7 +122,7 @@ create index if not exists idx_maintenance_city_hall on public.maintenance_order
 create index if not exists idx_maintenance_status on public.maintenance_orders(status);
 create index if not exists idx_activity_logs_city_hall on public.activity_logs(city_hall_id);
 
--- Updated_at trigger
+-- Functions
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -184,27 +156,6 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_city_halls_touch on public.city_halls;
-create trigger trg_city_halls_touch before update on public.city_halls for each row execute function public.touch_updated_at();
-
-drop trigger if exists trg_profiles_touch on public.profiles;
-create trigger trg_profiles_touch before update on public.profiles for each row execute function public.touch_updated_at();
-
-drop trigger if exists trg_lighting_points_touch on public.lighting_points;
-create trigger trg_lighting_points_touch before update on public.lighting_points for each row execute function public.touch_updated_at();
-
-drop trigger if exists trg_complaints_touch on public.complaints;
-create trigger trg_complaints_touch before update on public.complaints for each row execute function public.touch_updated_at();
-
-drop trigger if exists trg_maintenance_touch on public.maintenance_orders;
-create trigger trg_maintenance_touch before update on public.maintenance_orders for each row execute function public.touch_updated_at();
-
-drop trigger if exists trg_auth_user_created_profile on auth.users;
-create trigger trg_auth_user_created_profile
-after insert on auth.users
-for each row execute function public.handle_new_user();
-
--- Helper functions for RLS
 create or replace function public.is_admin_master()
 returns boolean
 language sql
@@ -259,6 +210,28 @@ as $$
   );
 $$;
 
+-- Triggers
+drop trigger if exists trg_city_halls_touch on public.city_halls;
+create trigger trg_city_halls_touch before update on public.city_halls for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_profiles_touch on public.profiles;
+create trigger trg_profiles_touch before update on public.profiles for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_lighting_points_touch on public.lighting_points;
+create trigger trg_lighting_points_touch before update on public.lighting_points for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_complaints_touch on public.complaints;
+create trigger trg_complaints_touch before update on public.complaints for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_maintenance_touch on public.maintenance_orders;
+create trigger trg_maintenance_touch before update on public.maintenance_orders for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_auth_user_created_profile on auth.users;
+create trigger trg_auth_user_created_profile
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+-- Enable RLS
 alter table public.city_halls enable row level security;
 alter table public.profiles enable row level security;
 alter table public.user_city_halls enable row level security;
@@ -267,7 +240,8 @@ alter table public.complaints enable row level security;
 alter table public.maintenance_orders enable row level security;
 alter table public.activity_logs enable row level security;
 
--- city_halls policies
+-- Policies
+drop policy if exists city_halls_select on public.city_halls;
 create policy city_halls_select on public.city_halls
 for select using (
   public.is_admin_master()
@@ -279,11 +253,12 @@ for select using (
   )
 );
 
+drop policy if exists city_halls_admin_manage on public.city_halls;
 create policy city_halls_admin_manage on public.city_halls
 for all using (public.is_admin_master())
 with check (public.is_admin_master());
 
--- profiles policies
+drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
 for select using (
   id = auth.uid()
@@ -300,6 +275,7 @@ for select using (
   )
 );
 
+drop policy if exists profiles_update_self on public.profiles;
 create policy profiles_update_self on public.profiles
 for update using (
   id = auth.uid()
@@ -310,13 +286,14 @@ with check (
   or public.is_admin_master()
 );
 
+drop policy if exists profiles_insert_admin on public.profiles;
 create policy profiles_insert_admin on public.profiles
 for insert with check (
   public.is_admin_master()
   or id = auth.uid()
 );
 
--- user_city_halls policies
+drop policy if exists uch_select on public.user_city_halls;
 create policy uch_select on public.user_city_halls
 for select using (
   user_id = auth.uid()
@@ -332,166 +309,104 @@ for select using (
   )
 );
 
+drop policy if exists uch_manage_admin on public.user_city_halls;
 create policy uch_manage_admin on public.user_city_halls
 for all using (public.is_admin_master())
 with check (public.is_admin_master());
 
--- lighting_points policies
+drop policy if exists poles_select on public.lighting_points;
 create policy poles_select on public.lighting_points
 for select using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists poles_insert_manage on public.lighting_points;
 create policy poles_insert_manage on public.lighting_points
 for insert with check (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 );
 
+drop policy if exists poles_update_manage on public.lighting_points;
 create policy poles_update_manage on public.lighting_points
 for update using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 )
 with check (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists poles_delete_manage on public.lighting_points;
 create policy poles_delete_manage on public.lighting_points
 for delete using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 );
 
--- complaints policies
+drop policy if exists complaints_select_internal on public.complaints;
 create policy complaints_select_internal on public.complaints
 for select using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists complaints_insert_public on public.complaints;
 create policy complaints_insert_public on public.complaints
-for insert with check (
-  status = 'PENDENTE'
-);
+for insert with check (status = 'PENDENTE');
 
+drop policy if exists complaints_update_internal on public.complaints;
 create policy complaints_update_internal on public.complaints
 for update using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 )
 with check (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 );
 
--- maintenance policies
+drop policy if exists maintenance_select_internal on public.maintenance_orders;
 create policy maintenance_select_internal on public.maintenance_orders
 for select using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists maintenance_insert_internal on public.maintenance_orders;
 create policy maintenance_insert_internal on public.maintenance_orders
 for insert with check (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 );
 
+drop policy if exists maintenance_update_internal on public.maintenance_orders;
 create policy maintenance_update_internal on public.maintenance_orders
 for update using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
-  or (
-    assigned_to = auth.uid()
-    and public.can_access_city_hall(
-      city_hall_id,
-      array['TECHNICAL']::public.user_role[]
-    )
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
+  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
 )
 with check (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
-  or (
-    assigned_to = auth.uid()
-    and public.can_access_city_hall(
-      city_hall_id,
-      array['TECHNICAL']::public.user_role[]
-    )
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
+  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
 );
 
+drop policy if exists maintenance_delete_internal on public.maintenance_orders;
 create policy maintenance_delete_internal on public.maintenance_orders
 for delete using (
-  public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]
-  )
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
 );
 
--- activity logs policies
+drop policy if exists logs_select_internal on public.activity_logs;
 create policy logs_select_internal on public.activity_logs
 for select using (
   city_hall_id is null
-  or public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  or public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists logs_insert_internal on public.activity_logs;
 create policy logs_insert_internal on public.activity_logs
 for insert with check (
   city_hall_id is null
-  or public.can_access_city_hall(
-    city_hall_id,
-    array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]
-  )
+  or public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
--- Seed minimum data
+-- Seed
 insert into public.city_halls (id, name, city, state, cnpj, latitude, longitude, status)
-values (
-  '11111111-1111-1111-1111-111111111111',
-  'Prefeitura de Exemplo',
-  'Cidade Exemplo',
-  'MG',
-  '12.345.678/0001-99',
-  -15.3983,
-  -42.3097,
-  'ATIVO'
-)
+values ('11111111-1111-1111-1111-111111111111', 'Prefeitura de Exemplo', 'Cidade Exemplo', 'MG', '12.345.678/0001-99', -15.3983, -42.3097, 'ATIVO')
 on conflict (id) do nothing;
-
--- Example seed profiles require existing auth.users IDs.
--- insert into public.profiles (id, full_name, role) values ('<auth-user-uuid>', 'Admin Prefeitura', 'CITY_HALL_ADMIN');
--- insert into public.user_city_halls (user_id, city_hall_id) values ('<auth-user-uuid>', '11111111-1111-1111-1111-111111111111');
 
 insert into public.lighting_points (code, city_hall_id, latitude, longitude, address, status)
 values
