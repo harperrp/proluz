@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { User, UserRole } from '@/types';
-import { dbSelect, getSession, signInWithPassword, signOut } from '@/lib/supabase';
+import { dbSelect, getValidSession, signInWithPassword, signOut } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   hasPermission: (roles: UserRole[]) => boolean;
   refreshUser: () => Promise<void>;
 }
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const refreshUser = useCallback(async () => {
-    const session = getSession();
+    const session = await getValidSession();
     if (!session?.user?.id) {
       setUser(null);
       return;
@@ -68,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUser]);
 
-  const logout = useCallback(() => {
-    signOut();
+  const logout = useCallback(async () => {
+    await signOut();
     setUser(null);
   }, []);
 
