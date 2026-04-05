@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PolesProvider } from "@/contexts/PolesContext";
 import { CityHallProvider } from "@/contexts/CityHallContext";
@@ -25,6 +25,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -35,7 +36,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   return <>{children}</>;
@@ -47,8 +48,7 @@ function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/denuncia" element={<Complaint />} />
-      
-      {/* Protected Dashboard Routes */}
+
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dashboard/mapa" element={<ProtectedRoute><DashboardMap /></ProtectedRoute>} />
       <Route path="/dashboard/denuncias" element={<ProtectedRoute><DashboardComplaints /></ProtectedRoute>} />
@@ -57,7 +57,7 @@ function AppRoutes() {
       <Route path="/dashboard/usuarios" element={<ProtectedRoute><DashboardUsers /></ProtectedRoute>} />
       <Route path="/dashboard/prefeituras" element={<ProtectedRoute><DashboardCityHalls /></ProtectedRoute>} />
       <Route path="/dashboard/relatorios" element={<ProtectedRoute><DashboardReports /></ProtectedRoute>} />
-      
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

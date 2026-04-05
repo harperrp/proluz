@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Lightbulb, AlertTriangle, Wrench, TrendingUp } from 'lucide-react';
+import { FileText, Lightbulb, AlertTriangle, Wrench, TrendingUp, Activity } from 'lucide-react';
 import { dbSelect } from '@/lib/supabase';
 import { usePoles } from '@/contexts/PolesContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, CartesianGrid, LineChart, Line } from 'recharts';
 
-interface ComplaintRow { id: string; status: string; created_at: string }
-interface MaintenanceRow { id: string; status: string; priority: string }
+interface ComplaintRow { id: string; status: 'PENDENTE' | 'APROVADA' | 'REJEITADA'; created_at: string }
+interface MaintenanceRow { id: string; status: 'ABERTA' | 'EM_EXECUCAO' | 'CONCLUIDA'; priority: 'ALTA' | 'MEDIA' | 'BAIXA'; opened_at: string; completed_at: string | null }
 
 export default function DashboardReports() {
   const { poles } = usePoles();
@@ -19,11 +19,14 @@ export default function DashboardReports() {
       try {
         const [c, m] = await Promise.all([
           dbSelect<ComplaintRow>('complaints?select=id,status,created_at'),
-          dbSelect<MaintenanceRow>('maintenance_orders?select=id,status,priority'),
+          dbSelect<MaintenanceRow>('maintenance_orders?select=id,status,priority,opened_at,completed_at'),
         ]);
         setComplaints(c);
         setMaintenance(m);
-      } catch {}
+      } catch {
+        setComplaints([]);
+        setMaintenance([]);
+      }
     })();
   }, []);
 
@@ -37,6 +40,34 @@ export default function DashboardReports() {
     { name: 'Média', value: maintenance.filter((m) => m.priority === 'MEDIA').length, color: '#f59e0b' },
     { name: 'Baixa', value: maintenance.filter((m) => m.priority === 'BAIXA').length, color: '#22c55e' },
   ].filter((d) => d.value > 0);
+
+  const complaintStatusBars = [
+    { name: 'Pendentes', value: complaints.filter((m) => m.status === 'PENDENTE').length, color: '#f59e0b' },
+    { name: 'Aprovadas', value: complaints.filter((m) => m.status === 'APROVADA').length, color: '#22c55e' },
+    { name: 'Rejeitadas', value: complaints.filter((m) => m.status === 'REJEITADA').length, color: '#ef4444' },
+  ];
+
+  const resolutionByMonth = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 6 }).map((_, idx) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+
+      const opened = maintenance.filter((m) => {
+        const d = new Date(m.opened_at);
+        return d.getMonth() === month && d.getFullYear() === year;
+      }).length;
+
+      const concluded = maintenance.filter((m) => {
+        if (!m.completed_at) return false;
+        const d = new Date(m.completed_at);
+        return d.getMonth() === month && d.getFullYear() === year;
+      }).length;
+
+      return { month: date.toLocaleDateString('pt-BR', { month: 'short' }), abertas: opened, concluidas: concluded };
+    });
+  }, [maintenance]);
 
   const stats = [
     { label: 'Total de Postes', value: poles.length, icon: Lightbulb, color: 'text-primary' },
@@ -54,10 +85,9 @@ export default function DashboardReports() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Relatórios</h1>
-          <p className="text-muted-foreground">Indicadores e métricas operacionais</p>
+          <p className="text-muted-foreground">Indicadores, KPI e agregações reais do banco</p>
         </div>
 
-        {/* KPIs */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stats.map((s) => (
             <Card key={s.label}>
@@ -74,11 +104,8 @@ export default function DashboardReports() {
           ))}
         </div>
 
-        {/* Operational rate */}
         <Card>
-          <CardHeader>
-            <CardTitle>Taxa Operacional</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Taxa Operacional</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
               <div className="flex-1 h-4 rounded-full bg-muted overflow-hidden">
@@ -90,24 +117,56 @@ export default function DashboardReports() {
           </CardContent>
         </Card>
 
-        {/* Priority chart */}
-        {priorityData.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <CardHeader>
-              <CardTitle>Ordens de Manutenção por Prioridade</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />Denúncias por status</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={priorityData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {priorityData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, color: 'hsl(var(--foreground))' }} />
-                </PieChart>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={complaintStatusBars}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {complaintStatusBars.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        )}
+
+          {priorityData.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Ordens por Prioridade</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie data={priorityData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                      {priorityData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5" />Evolução da manutenção (6 meses)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={resolutionByMonth}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Line type="monotone" dataKey="abertas" stroke="#3b82f6" strokeWidth={3} />
+                <Line type="monotone" dataKey="concluidas" stroke="#22c55e" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
