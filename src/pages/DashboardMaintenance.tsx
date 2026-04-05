@@ -9,6 +9,7 @@ import { dbPatch, dbSelect } from '@/lib/supabase';
 import { Pole } from '@/types';
 import { usePoles } from '@/contexts/PolesContext';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MaintenanceOrderRow {
   id: string;
@@ -26,8 +27,10 @@ const priorityClass: Record<MaintenanceOrderRow['priority'], string> = {
 };
 
 export default function DashboardMaintenance() {
+  const { user } = useAuth();
   const { poles, updatePoleStatus } = usePoles();
   const [orders, setOrders] = useState<MaintenanceOrderRow[]>([]);
+  const canExecuteMaintenance = user?.role === 'ADMIN' || user?.role === 'TECHNICAL';
 
   const load = async () => {
     const rows = await dbSelect<MaintenanceOrderRow>(
@@ -100,13 +103,15 @@ export default function DashboardMaintenance() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {order.status === 'ABERTA' && (
+                  {order.status === 'ABERTA' && canExecuteMaintenance && (
                     <Button variant="outline" onClick={() => void startOrder(order)}>Iniciar</Button>
                   )}
-                  <Button onClick={() => void completeOrder(order)}>
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Concluir
-                  </Button>
+                  {canExecuteMaintenance && (
+                    <Button onClick={() => void completeOrder(order)}>
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Concluir
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

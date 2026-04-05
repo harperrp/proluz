@@ -4,7 +4,7 @@
 create extension if not exists pgcrypto;
 
 -- =====================================================
--- 1) Prefeitura principal
+-- 1) Prefeituras ativas para ambiente real
 -- =====================================================
 insert into public.city_halls (id, name, city, state, cnpj, status, latitude, longitude)
 values (
@@ -16,6 +16,26 @@ values (
   'ATIVO',
   -16.7282,
   -43.8578
+)
+on conflict (id) do update set
+  name = excluded.name,
+  city = excluded.city,
+  state = excluded.state,
+  cnpj = excluded.cnpj,
+  status = excluded.status,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude;
+
+insert into public.city_halls (id, name, city, state, cnpj, status, latitude, longitude)
+values (
+  '22222222-2222-2222-2222-222222222222',
+  'Prefeitura de Janaúba',
+  'Janaúba',
+  'MG',
+  '98.765.432/0001-22',
+  'ATIVO',
+  -15.8022,
+  -43.3088
 )
 on conflict (id) do update set
   name = excluded.name,
@@ -114,7 +134,7 @@ values
 on conflict (user_id, city_hall_id) do nothing;
 
 -- =====================================================
--- 3) 40 postes de demonstração
+-- 3) Postes de demonstração
 -- =====================================================
 insert into public.lighting_points (code, city_hall_id, latitude, longitude, status, address, neighborhood, observations)
 select
@@ -127,6 +147,26 @@ select
   (array['Centro', 'Vila Nova', 'Jardim América', 'Santos Reis'])[1 + (gs % 4)],
   case when gs % 7 = 0 then 'Necessita inspeção periódica' else null end
 from generate_series(1, 40) gs
+on conflict (code) do update set
+  city_hall_id = excluded.city_hall_id,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  status = excluded.status,
+  address = excluded.address,
+  neighborhood = excluded.neighborhood,
+  observations = excluded.observations;
+
+insert into public.lighting_points (code, city_hall_id, latitude, longitude, status, address, neighborhood, observations)
+select
+  format('J-%s', lpad(gs::text, 3, '0')),
+  '22222222-2222-2222-2222-222222222222',
+  -15.8022 + ((gs % 10) * 0.0012),
+  -43.3088 + ((gs % 8) * 0.0011),
+  case when gs % 4 = 0 then 'QUEIMADO'::public.pole_status else 'FUNCIONANDO'::public.pole_status end,
+  format('Av. %s, %s', (array['Brasil', 'Minas Gerais', 'Dos Trabalhadores', 'Rio Branco'])[1 + (gs % 4)], 70 + gs),
+  (array['Centro', 'Esplanada', 'Planalto', 'Alvorada'])[1 + (gs % 4)],
+  case when gs % 6 = 0 then 'Ponto com histórico de oscilação' else null end
+from generate_series(1, 18) gs
 on conflict (code) do update set
   city_hall_id = excluded.city_hall_id,
   latitude = excluded.latitude,
@@ -198,6 +238,41 @@ where not exists (
     and date_trunc('day', x.created_at) = date_trunc('day', c.created_at)
 );
 
+insert into public.complaints (
+  city_hall_id,
+  lighting_point_code,
+  latitude,
+  longitude,
+  description,
+  status,
+  citizen_cpf,
+  citizen_name,
+  citizen_phone,
+  created_at,
+  updated_at
+)
+select
+  '22222222-2222-2222-2222-222222222222',
+  lp.code,
+  lp.latitude,
+  lp.longitude,
+  format('Poste %s apagado próximo à praça principal.', lp.code),
+  case when row_number() over (order by lp.code) % 3 = 0 then 'APROVADA'::public.complaint_status else 'PENDENTE'::public.complaint_status end,
+  format('300.000.%s-%s', lpad((row_number() over (order by lp.code) % 999)::text, 3, '0'), lpad((row_number() over (order by lp.code) % 99)::text, 2, '0')),
+  format('Morador Janaúba %s', row_number() over (order by lp.code)),
+  format('(38) 98888-%s', lpad((3000 + row_number() over (order by lp.code))::text, 4, '0')),
+  now() - ((row_number() over (order by lp.code) % 30) || ' days')::interval,
+  now() - ((row_number() over (order by lp.code) % 30) || ' days')::interval + interval '1 hour'
+from public.lighting_points lp
+where lp.city_hall_id = '22222222-2222-2222-2222-222222222222'
+  and lp.status = 'QUEIMADO'
+  and not exists (
+    select 1
+    from public.complaints c
+    where c.city_hall_id = lp.city_hall_id
+      and c.lighting_point_code = lp.code
+  );
+
 -- =====================================================
 -- 5) Ordens de manutenção com variação de prioridade/status
 -- =====================================================
@@ -245,6 +320,33 @@ from selected_complaints sc
 where not exists (
   select 1 from public.maintenance_orders mo where mo.complaint_id = sc.id
 );
+
+insert into public.maintenance_orders (
+  city_hall_id,
+  lighting_point_code,
+  complaint_id,
+  status,
+  priority,
+  description,
+  assigned_to,
+  opened_at
+)
+select
+  c.city_hall_id,
+  c.lighting_point_code,
+  c.id,
+  'ABERTA'::public.maintenance_status,
+  'MEDIA'::public.priority_level,
+  format('Ordem inicial da prefeitura de Janaúba para o poste %s.', c.lighting_point_code),
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  c.created_at + interval '2 hours'
+from public.complaints c
+where c.city_hall_id = '22222222-2222-2222-2222-222222222222'
+  and c.status in ('PENDENTE', 'APROVADA')
+  and c.lighting_point_code is not null
+  and not exists (
+    select 1 from public.maintenance_orders mo where mo.complaint_id = c.id
+  );
 
 -- Atualiza status dos postes de ordens concluídas
 update public.lighting_points lp
