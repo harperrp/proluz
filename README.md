@@ -111,3 +111,25 @@ Fluxo principal:
 npm i
 npm run dev
 ```
+
+## Configuração Supabase (projeto atual)
+
+1. Copie o arquivo de ambiente para uso local:
+```sh
+cp .env.example .env.local
+```
+
+2. Valores esperados:
+```env
+VITE_SUPABASE_URL=https://hgkldqvfpkpevqpxbddt.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_UpzcYkTr9UG23ZnQRkbxjw_6k0aB9nn
+```
+
+> Compatibilidade: também é aceito `VITE_SUPABASE_ANON_KEY`.
+
+3. Vincular Supabase CLI ao projeto:
+```sh
+supabase login
+supabase init
+supabase link --project-ref hgkldqvfpkpevqpxbddt
+```

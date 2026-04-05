@@ -97,8 +97,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   const filteredNavItems = navItems.filter(item => hasPermission(item.roles));
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
@@ -193,7 +193,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 Página Inicial
               </Link>
               <button
-                onClick={handleLogout}
+                onClick={() => { void handleLogout(); }}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200"
               >
                 <LogOut className="h-5 w-5" />

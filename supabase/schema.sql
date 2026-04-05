@@ -116,6 +116,29 @@ begin
 end;
 $$;
 
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  fallback_name text;
+begin
+  fallback_name := coalesce(
+    new.raw_user_meta_data ->> 'full_name',
+    split_part(coalesce(new.email, ''), '@', 1),
+    'Usuário'
+  );
+
+  insert into public.profiles (id, full_name, role)
+  values (new.id, fallback_name, 'CITIZEN')
+  on conflict (id) do nothing;
+
+  return new;
+end;
+$$;
+
 drop trigger if exists trg_city_halls_touch on public.city_halls;
 create trigger trg_city_halls_touch before update on public.city_halls for each row execute procedure public.touch_updated_at();
 drop trigger if exists trg_profiles_touch on public.profiles;
@@ -126,6 +149,10 @@ drop trigger if exists trg_complaints_touch on public.complaints;
 create trigger trg_complaints_touch before update on public.complaints for each row execute procedure public.touch_updated_at();
 drop trigger if exists trg_maintenance_touch on public.maintenance_orders;
 create trigger trg_maintenance_touch before update on public.maintenance_orders for each row execute procedure public.touch_updated_at();
+drop trigger if exists trg_auth_user_created_profile on auth.users;
+create trigger trg_auth_user_created_profile
+after insert on auth.users
+for each row execute procedure public.handle_new_user();
 
 -- Helper functions for RLS
 create or replace function public.is_admin_master()
@@ -135,6 +162,19 @@ stable
 as $$
   select exists (
     select 1 from public.profiles p where p.id = auth.uid() and p.role = 'ADMIN'
+  );
+$$;
+
+create or replace function public.user_has_role(allowed_roles public.user_role[])
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = any(allowed_roles)
   );
 $$;
 
@@ -149,6 +189,23 @@ as $$
     from public.user_city_halls uch
     where uch.user_id = auth.uid()
       and uch.city_hall_id = target_city_hall
+  );
+$$;
+
+create or replace function public.can_access_city_hall(target_city_hall uuid, allowed_roles public.user_role[])
+returns boolean
+language sql
+stable
+as $$
+  select public.is_admin_master()
+  or (
+    public.user_has_role(allowed_roles)
+    and exists (
+      select 1
+      from public.user_city_halls uch
+      where uch.user_id = auth.uid()
+        and uch.city_hall_id = target_city_hall
+    )
   );
 $$;
 
@@ -168,7 +225,20 @@ for all using (public.is_admin_master()) with check (public.is_admin_master());
 
 -- profiles policies
 create policy if not exists profiles_select on public.profiles
-for select using (id = auth.uid() or public.is_admin_master());
+for select using (
+  id = auth.uid()
+  or public.is_admin_master()
+  or (
+    public.user_has_role(array['CITY_HALL_ADMIN']::public.user_role[])
+    and exists (
+      select 1
+      from public.user_city_halls manager_uch
+      join public.user_city_halls target_uch on target_uch.city_hall_id = manager_uch.city_hall_id
+      where manager_uch.user_id = auth.uid()
+        and target_uch.user_id = profiles.id
+    )
+  )
+);
 create policy if not exists profiles_update_self on public.profiles
 for update using (id = auth.uid() or public.is_admin_master()) with check (id = auth.uid() or public.is_admin_master());
 create policy if not exists profiles_insert_admin on public.profiles
@@ -176,35 +246,64 @@ for insert with check (public.is_admin_master() or id = auth.uid());
 
 -- user_city_halls policies
 create policy if not exists uch_select on public.user_city_halls
-for select using (user_id = auth.uid() or public.is_admin_master());
+for select using (
+  user_id = auth.uid()
+  or public.is_admin_master()
+  or (
+    public.user_has_role(array['CITY_HALL_ADMIN']::public.user_role[])
+    and exists (
+      select 1
+      from public.user_city_halls manager_uch
+      where manager_uch.user_id = auth.uid()
+        and manager_uch.city_hall_id = user_city_halls.city_hall_id
+    )
+  )
+);
 create policy if not exists uch_manage_admin on public.user_city_halls
 for all using (public.is_admin_master()) with check (public.is_admin_master());
 
 -- lighting_points policies
 create policy if not exists poles_select on public.lighting_points
-for select using (public.belongs_to_city_hall(city_hall_id));
-create policy if not exists poles_manage on public.lighting_points
-for all using (public.belongs_to_city_hall(city_hall_id)) with check (public.belongs_to_city_hall(city_hall_id));
+for select using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
+create policy if not exists poles_insert_manage on public.lighting_points
+for insert with check (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]));
+create policy if not exists poles_update_manage on public.lighting_points
+for update using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]))
+with check (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
+create policy if not exists poles_delete_manage on public.lighting_points
+for delete using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]));
 
 -- complaints policies
 create policy if not exists complaints_select_internal on public.complaints
-for select using (public.belongs_to_city_hall(city_hall_id));
+for select using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
 create policy if not exists complaints_insert_public on public.complaints
 for insert with check (status = 'PENDENTE');
 create policy if not exists complaints_update_internal on public.complaints
-for update using (public.belongs_to_city_hall(city_hall_id)) with check (public.belongs_to_city_hall(city_hall_id));
+for update using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]))
+with check (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]));
 
 -- maintenance policies
 create policy if not exists maintenance_select_internal on public.maintenance_orders
-for select using (public.belongs_to_city_hall(city_hall_id));
-create policy if not exists maintenance_manage_internal on public.maintenance_orders
-for all using (public.belongs_to_city_hall(city_hall_id)) with check (public.belongs_to_city_hall(city_hall_id));
+for select using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
+create policy if not exists maintenance_insert_internal on public.maintenance_orders
+for insert with check (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]));
+create policy if not exists maintenance_update_internal on public.maintenance_orders
+for update using (
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
+  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
+)
+with check (
+  public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
+  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
+);
+create policy if not exists maintenance_delete_internal on public.maintenance_orders
+for delete using (public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[]));
 
 -- activity logs policies
 create policy if not exists logs_select_internal on public.activity_logs
-for select using (city_hall_id is null or public.belongs_to_city_hall(city_hall_id));
+for select using (city_hall_id is null or public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
 create policy if not exists logs_insert_internal on public.activity_logs
-for insert with check (city_hall_id is null or public.belongs_to_city_hall(city_hall_id));
+for insert with check (city_hall_id is null or public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[]));
 
 -- Seed minimum data (replace auth user IDs by real IDs from auth.users in your project)
 insert into public.city_halls (id, name, city, state, cnpj, latitude, longitude, status)
