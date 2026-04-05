@@ -160,9 +160,14 @@ create or replace function public.is_admin_master()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
-    select 1 from public.profiles p where p.id = auth.uid() and p.role = 'ADMIN'
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and p.role = 'ADMIN'
   );
 $$;
 
@@ -170,6 +175,8 @@ create or replace function public.user_has_role(allowed_roles public.user_role[]
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -183,6 +190,8 @@ create or replace function public.belongs_to_city_hall(target_city_hall uuid)
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select public.is_admin_master()
   or exists (
@@ -197,6 +206,8 @@ create or replace function public.can_access_city_hall(target_city_hall uuid, al
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select public.is_admin_master()
   or (
@@ -300,18 +311,14 @@ for select using (
   or public.is_admin_master()
   or (
     public.user_has_role(array['CITY_HALL_ADMIN']::public.user_role[])
-    and exists (
-      select 1
-      from public.user_city_halls manager_uch
-      where manager_uch.user_id = auth.uid()
-        and manager_uch.city_hall_id = user_city_halls.city_hall_id
-    )
+    and public.belongs_to_city_hall(city_hall_id)
   )
 );
 
 drop policy if exists uch_manage_admin on public.user_city_halls;
 create policy uch_manage_admin on public.user_city_halls
-for all using (public.is_admin_master())
+for all
+using (public.is_admin_master())
 with check (public.is_admin_master());
 
 drop policy if exists poles_select on public.lighting_points;
@@ -376,11 +383,17 @@ drop policy if exists maintenance_update_internal on public.maintenance_orders;
 create policy maintenance_update_internal on public.maintenance_orders
 for update using (
   public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
-  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
+  or (
+    assigned_to = auth.uid()
+    and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[])
+  )
 )
 with check (
   public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY']::public.user_role[])
-  or (assigned_to = auth.uid() and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[]))
+  or (
+    assigned_to = auth.uid()
+    and public.can_access_city_hall(city_hall_id, array['TECHNICAL']::public.user_role[])
+  )
 );
 
 drop policy if exists maintenance_delete_internal on public.maintenance_orders;
