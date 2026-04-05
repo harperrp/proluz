@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { User, UserRole } from '@/types';
+import { dbSelect, getSession, signInWithPassword, signOut } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -7,75 +8,69 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   hasPermission: (roles: UserRole[]) => boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const MOCK_USERS: (User & { password: string })[] = [
-  {
-    id: '1',
-    email: 'admin@sistema.gov.br',
-    password: 'admin123',
-    name: 'Administrador Geral',
-    role: 'ADMIN',
-    createdAt: new Date(),
-  },
-  {
-    id: '2',
-    email: 'prefeitura@cidade.gov.br',
-    password: 'prefeitura123',
-    name: 'João Silva',
-    role: 'CITY_HALL_ADMIN',
-    cityHallId: '1',
-    createdAt: new Date(),
-  },
-  {
-    id: '3',
-    email: 'secretario@cidade.gov.br',
-    password: 'secretario123',
-    name: 'Maria Santos',
-    role: 'SECRETARY',
-    cityHallId: '1',
-    createdAt: new Date(),
-  },
-  {
-    id: '4',
-    email: 'tecnico@cidade.gov.br',
-    password: 'tecnico123',
-    name: 'Carlos Oliveira',
-    role: 'TECHNICAL',
-    cityHallId: '1',
-    createdAt: new Date(),
-  },
-];
+interface ProfileRow {
+  id: string;
+  full_name: string;
+  role: UserRole;
+  created_at: string;
+  user_city_halls?: Array<{ city_hall_id: string }>;
+}
+
+const mapProfileToUser = (profile: ProfileRow, email: string): User => ({
+  id: profile.id,
+  email,
+  name: profile.full_name,
+  role: profile.role,
+  cityHallId: profile.user_city_halls?.[0]?.city_hall_id,
+  createdAt: new Date(profile.created_at),
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('auth_user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const foundUser = MOCK_USERS.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('auth_user', JSON.stringify(userWithoutPassword));
-      return true;
+  const refreshUser = useCallback(async () => {
+    const session = getSession();
+    if (!session?.user?.id) {
+      setUser(null);
+      return;
     }
-    return false;
+
+    try {
+      const rows = await dbSelect<ProfileRow>(
+        `profiles?select=id,full_name,role,created_at,user_city_halls(city_hall_id)&id=eq.${session.user.id}&limit=1`,
+      );
+      if (!rows[0]) {
+        setUser(null);
+        return;
+      }
+      setUser(mapProfileToUser(rows[0], session.user.email ?? ''));
+    } catch {
+      setUser(null);
+    }
   }, []);
 
+  useEffect(() => {
+    void refreshUser();
+  }, [refreshUser]);
+
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      await signInWithPassword(email, password);
+      await refreshUser();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [refreshUser]);
+
   const logout = useCallback(() => {
+    signOut();
     setUser(null);
-    localStorage.removeItem('auth_user');
   }, []);
 
   const hasPermission = useCallback((roles: UserRole[]): boolean => {
@@ -90,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         hasPermission,
+        refreshUser,
       }}
     >
       {children}

@@ -1,68 +1,14 @@
-import { useState } from 'react';
-import { MapPin, Clock, CheckCircle, XCircle, AlertCircle, Eye, Ban } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MapPin, Clock, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
 import { Complaint, ComplaintStatus, REJECTION_REASONS } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-
-// Mock data
-const MOCK_COMPLAINTS: Complaint[] = [
-  {
-    id: '1',
-    latitude: -23.5505,
-    longitude: -46.6333,
-    description: 'Poste apagado há mais de uma semana na Rua das Flores',
-    status: 'PENDENTE',
-    citizenCpf: '123.456.789-00',
-    citizenName: 'José da Silva',
-    citizenPhone: '(11) 98765-4321',
-    cityHallId: '1',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    latitude: -23.5520,
-    longitude: -46.6350,
-    description: 'Lâmpada piscando intermitentemente',
-    status: 'APROVADA',
-    citizenCpf: '987.654.321-00',
-    citizenName: 'Maria Santos',
-    cityHallId: '1',
-    createdAt: new Date('2024-01-14'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: '3',
-    latitude: -23.5490,
-    longitude: -46.6310,
-    description: 'Poste com fiação exposta',
-    status: 'REJEITADA',
-    rejectionReason: 'Poste não pertence ao município',
-    citizenCpf: '456.789.123-00',
-    citizenName: 'Carlos Oliveira',
-    cityHallId: '1',
-    createdAt: new Date('2024-01-13'),
-    updatedAt: new Date('2024-01-14'),
-  },
-];
+import { dbPatch, dbSelect } from '@/lib/supabase';
 
 const statusConfig: Record<ComplaintStatus, { label: string; className: string; icon: typeof AlertCircle }> = {
   PENDENTE: { label: 'Pendente', className: 'status-badge-pending', icon: AlertCircle },
@@ -70,22 +16,30 @@ const statusConfig: Record<ComplaintStatus, { label: string; className: string; 
   REJEITADA: { label: 'Rejeitada', className: 'status-badge-rejected', icon: XCircle },
 };
 
-interface ComplaintsListProps {
-  bannedCpfs?: Set<string>;
-  onBanCpf?: (cpf: string, name: string) => void;
-  onUnbanCpf?: (cpf: string) => void;
+interface ComplaintRow {
+  id: string; lighting_point_code: string | null; latitude: number; longitude: number; description: string; status: ComplaintStatus;
+  rejection_reason: string | null; secretary_observations: string | null; citizen_cpf: string; citizen_name: string; citizen_phone: string | null; city_hall_id: string; created_at: string; updated_at: string;
 }
 
-const EMPTY_SET = new Set<string>();
+const mapRow = (r: ComplaintRow): Complaint => ({
+  id: r.id, poleId: r.lighting_point_code ?? undefined, latitude: r.latitude, longitude: r.longitude, description: r.description, status: r.status,
+  rejectionReason: r.rejection_reason ?? undefined, secretaryObservations: r.secretary_observations ?? undefined, citizenCpf: r.citizen_cpf, citizenName: r.citizen_name, citizenPhone: r.citizen_phone ?? undefined, cityHallId: r.city_hall_id, createdAt: new Date(r.created_at), updatedAt: new Date(r.updated_at),
+});
 
-export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, onUnbanCpf = () => {} }: ComplaintsListProps) {
-  const [complaints, setComplaints] = useState<Complaint[]>(MOCK_COMPLAINTS);
+export function ComplaintsList() {
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [action, setAction] = useState<'view' | 'approve' | 'reject'>('view');
   const [rejectionReason, setRejectionReason] = useState('');
   const [observations, setObservations] = useState('');
+
+  const load = async () => {
+    const rows = await dbSelect<ComplaintRow>('complaints?select=*&order=created_at.desc');
+    setComplaints(rows.map(mapRow));
+  };
+
+  useEffect(() => { void load(); }, []);
 
   const handleAction = (complaint: Complaint, actionType: 'view' | 'approve' | 'reject') => {
     setSelectedComplaint(complaint);
@@ -95,149 +49,40 @@ export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, on
     setObservations('');
   };
 
-  const handleApprove = () => {
-    if (selectedComplaint) {
-      setComplaints(prev =>
-        prev.map(c =>
-          c.id === selectedComplaint.id
-            ? { ...c, status: 'APROVADA' as ComplaintStatus, secretaryObservations: observations, updatedAt: new Date() }
-            : c
-        )
-      );
-      setDialogOpen(false);
-    }
+  const handleApprove = async () => {
+    if (!selectedComplaint) return;
+    await dbPatch(`complaints?id=eq.${selectedComplaint.id}`, { status: 'APROVADA', secretary_observations: observations, updated_at: new Date().toISOString() });
+    setDialogOpen(false);
+    toast.success('Denúncia aprovada');
+    await load();
   };
 
-  const handleReject = () => {
-    if (selectedComplaint && rejectionReason) {
-      setComplaints(prev =>
-        prev.map(c =>
-          c.id === selectedComplaint.id
-            ? {
-                ...c,
-                status: 'REJEITADA' as ComplaintStatus,
-                rejectionReason,
-                secretaryObservations: observations,
-                updatedAt: new Date(),
-              }
-            : c
-        )
-      );
-      setDialogOpen(false);
-    }
+  const handleReject = async () => {
+    if (!selectedComplaint || !rejectionReason) return;
+    await dbPatch(`complaints?id=eq.${selectedComplaint.id}`, { status: 'REJEITADA', rejection_reason: rejectionReason, secretary_observations: observations, updated_at: new Date().toISOString() });
+    setDialogOpen(false);
+    toast.success('Denúncia rejeitada');
+    await load();
   };
 
-  const handleBanCpf = (complaint: Complaint) => {
-    setSelectedComplaint(complaint);
-    setBanDialogOpen(true);
-  };
-
-  const confirmBan = () => {
-    if (selectedComplaint) {
-      onBanCpf(selectedComplaint.citizenCpf, selectedComplaint.citizenName);
-      setBanDialogOpen(false);
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
+  const formatDate = (date: Date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 
   return (
     <div className="space-y-4">
-      {complaints.filter(c => !bannedCpfs.has(c.citizenCpf) && c.status === 'PENDENTE').map(complaint => {
+      {complaints.map((complaint) => {
         const status = statusConfig[complaint.status];
         const StatusIcon = status.icon;
-
         return (
-          <div
-            key={complaint.id}
-            className="rounded-lg border bg-card p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={cn('gap-1', status.className)}>
-                    <StatusIcon className="h-3 w-3" />
-                    {status.label}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">#{complaint.id}</span>
-                  {bannedCpfs.has(complaint.citizenCpf) && (
-                    <Badge variant="destructive" className="gap-1 text-[10px]">
-                      <Ban className="h-3 w-3" /> CPF Banido
-                    </Badge>
-                  )}
-                </div>
-                
+          <div key={complaint.id} className="rounded-lg border bg-card p-4">
+            <div className="flex justify-between gap-4">
+              <div className="space-y-2">
+                <Badge className={cn('gap-1', status.className)}><StatusIcon className="h-3 w-3" />{status.label}</Badge>
                 <p className="text-sm">{complaint.description}</p>
-                
-                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {complaint.latitude.toFixed(4)}, {complaint.longitude.toFixed(4)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDate(complaint.createdAt)}
-                  </span>
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Denunciante: {complaint.citizenName}
-                </p>
-
-                {complaint.rejectionReason && (
-                  <p className="text-xs text-destructive">
-                    Motivo: {complaint.rejectionReason}
-                  </p>
-                )}
+                <div className="text-xs text-muted-foreground flex gap-3"><span className="flex gap-1 items-center"><MapPin className="h-3 w-3" />{complaint.latitude.toFixed(4)}, {complaint.longitude.toFixed(4)}</span><span className="flex gap-1 items-center"><Clock className="h-3 w-3" />{formatDate(complaint.createdAt)}</span></div>
               </div>
-
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleAction(complaint, 'view')}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                {!bannedCpfs.has(complaint.citizenCpf) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleBanCpf(complaint)}
-                    title="Banir CPF"
-                  >
-                    <Ban className="h-4 w-4" />
-                  </Button>
-                )}
-                {complaint.status === 'PENDENTE' && (
-                  <>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => handleAction(complaint, 'approve')}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Aprovar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleAction(complaint, 'reject')}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Rejeitar
-                    </Button>
-                  </>
-                )}
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleAction(complaint, 'view')}><Eye className="h-4 w-4" /></Button>
+                {complaint.status === 'PENDENTE' && <><Button variant="success" size="sm" onClick={() => handleAction(complaint, 'approve')}>Aprovar</Button><Button variant="destructive" size="sm" onClick={() => handleAction(complaint, 'reject')}>Rejeitar</Button></>}
               </div>
             </div>
           </div>
@@ -245,115 +90,15 @@ export function ComplaintsList({ bannedCpfs = EMPTY_SET, onBanCpf = () => {}, on
       })}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {action === 'view' && 'Detalhes da Denúncia'}
-              {action === 'approve' && 'Aprovar Denúncia'}
-              {action === 'reject' && 'Rejeitar Denúncia'}
-            </DialogTitle>
-            <DialogDescription>
-              {action === 'view' && 'Informações completas da denúncia'}
-              {action === 'approve' && 'Confirme a aprovação desta denúncia'}
-              {action === 'reject' && 'Selecione o motivo da rejeição'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedComplaint && (
-            <div className="space-y-4">
-              <div className="space-y-2 text-sm">
-                <p><strong>Descrição:</strong> {selectedComplaint.description}</p>
-                <p><strong>Denunciante:</strong> {selectedComplaint.citizenName}</p>
-                <p><strong>CPF:</strong> {selectedComplaint.citizenCpf}</p>
-                {selectedComplaint.citizenPhone && (
-                  <p><strong>Telefone:</strong> {selectedComplaint.citizenPhone}</p>
-                )}
-                <p><strong>Data:</strong> {formatDate(selectedComplaint.createdAt)}</p>
-              </div>
-
-              {action === 'reject' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Motivo da Rejeição *</label>
-                  <Select value={rejectionReason} onValueChange={setRejectionReason}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um motivo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REJECTION_REASONS.map(reason => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {(action === 'approve' || action === 'reject') && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Observações</label>
-                  <Textarea
-                    value={observations}
-                    onChange={e => setObservations(e.target.value)}
-                    placeholder="Observações adicionais..."
-                    rows={3}
-                  />
-                </div>
-              )}
+        <DialogContent>
+          <DialogHeader><DialogTitle>{action === 'view' ? 'Detalhes' : action === 'approve' ? 'Aprovar denúncia' : 'Rejeitar denúncia'}</DialogTitle><DialogDescription>{selectedComplaint?.description}</DialogDescription></DialogHeader>
+          {action !== 'view' && (
+            <div className="space-y-3">
+              {action === 'reject' && <Select value={rejectionReason} onValueChange={setRejectionReason}><SelectTrigger><SelectValue placeholder="Motivo" /></SelectTrigger><SelectContent>{REJECTION_REASONS.map((reason) => <SelectItem key={reason} value={reason}>{reason}</SelectItem>)}</SelectContent></Select>}
+              <Textarea placeholder="Observações" value={observations} onChange={(e) => setObservations(e.target.value)} />
             </div>
           )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {action === 'view' ? 'Fechar' : 'Cancelar'}
-            </Button>
-            {action === 'approve' && (
-              <Button variant="success" onClick={handleApprove}>
-                Confirmar Aprovação
-              </Button>
-            )}
-            {action === 'reject' && (
-              <Button
-                variant="destructive"
-                onClick={handleReject}
-                disabled={!rejectionReason}
-              >
-                Confirmar Rejeição
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Ban confirmation dialog */}
-      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <Ban className="h-5 w-5" />
-              Banir CPF
-            </DialogTitle>
-            <DialogDescription>
-              Esta ação impedirá que este CPF envie novas denúncias.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedComplaint && (
-            <div className="space-y-2 text-sm rounded-lg bg-muted p-3">
-              <p><strong>Nome:</strong> {selectedComplaint.citizenName}</p>
-              <p><strong>CPF:</strong> {selectedComplaint.citizenCpf}</p>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={confirmBan}>
-              <Ban className="h-4 w-4 mr-1" />
-              Confirmar Banimento
-            </Button>
-          </DialogFooter>
+          <DialogFooter>{action === 'approve' && <Button onClick={() => void handleApprove()}>Confirmar</Button>}{action === 'reject' && <Button variant="destructive" disabled={!rejectionReason} onClick={() => void handleReject()}>Confirmar</Button>}</DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
