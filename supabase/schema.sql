@@ -255,8 +255,7 @@ alter table public.activity_logs enable row level security;
 drop policy if exists city_halls_select on public.city_halls;
 create policy city_halls_select on public.city_halls
 for select using (
-  status = 'ATIVO'
-  or public.is_admin_master()
+  public.is_admin_master()
   or exists (
     select 1
     from public.user_city_halls uch
@@ -267,10 +266,7 @@ for select using (
 
 drop policy if exists city_halls_public_active_select on public.city_halls;
 create policy city_halls_public_active_select on public.city_halls
- codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
-
- main
 for select using (
   status = 'ATIVO'
 );
@@ -340,10 +336,7 @@ for select using (
 
 drop policy if exists poles_select_public_active_city_hall on public.lighting_points;
 create policy poles_select_public_active_city_hall on public.lighting_points
- codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
-
- main
 for select using (
   exists (
     select 1
@@ -382,10 +375,7 @@ for select using (
 
 drop policy if exists complaints_insert_public on public.complaints;
 create policy complaints_insert_public on public.complaints
- codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
-
- main
 for insert with check (
   status = 'PENDENTE'
   and lighting_point_code is not null
