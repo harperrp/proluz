@@ -20,6 +20,7 @@ import DashboardReports from "./pages/DashboardReports";
 import NotFound from "./pages/NotFound";
 import { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { UserRole } from "@/types";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,16 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function RoleProtectedRoute({ children, roles }: { children: ReactNode; roles: UserRole[] }) {
+  const { user } = useAuth();
+
+  if (!user || !roles.includes(user.role)) {
+    return <Navigate to={user?.role === 'CITIZEN' ? '/denuncia' : '/'} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -49,14 +60,14 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/denuncia" element={<Complaint />} />
 
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/dashboard/mapa" element={<ProtectedRoute><DashboardMap /></ProtectedRoute>} />
-      <Route path="/dashboard/denuncias" element={<ProtectedRoute><DashboardComplaints /></ProtectedRoute>} />
-      <Route path="/dashboard/manutencao" element={<ProtectedRoute><DashboardMaintenance /></ProtectedRoute>} />
-      <Route path="/dashboard/postes" element={<ProtectedRoute><DashboardPoles /></ProtectedRoute>} />
-      <Route path="/dashboard/usuarios" element={<ProtectedRoute><DashboardUsers /></ProtectedRoute>} />
-      <Route path="/dashboard/prefeituras" element={<ProtectedRoute><DashboardCityHalls /></ProtectedRoute>} />
-      <Route path="/dashboard/relatorios" element={<ProtectedRoute><DashboardReports /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']}><Dashboard /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/mapa" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']}><DashboardMap /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/denuncias" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY']}><DashboardComplaints /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/manutencao" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN', 'TECHNICAL']}><DashboardMaintenance /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/postes" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']}><DashboardPoles /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/usuarios" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN']}><DashboardUsers /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/prefeituras" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN']}><DashboardCityHalls /></RoleProtectedRoute></ProtectedRoute>} />
+      <Route path="/dashboard/relatorios" element={<ProtectedRoute><RoleProtectedRoute roles={['ADMIN', 'CITY_HALL_ADMIN']}><DashboardReports /></RoleProtectedRoute></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

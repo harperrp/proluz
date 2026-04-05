@@ -255,13 +255,21 @@ alter table public.activity_logs enable row level security;
 drop policy if exists city_halls_select on public.city_halls;
 create policy city_halls_select on public.city_halls
 for select using (
-  public.is_admin_master()
+  status = 'ATIVO'
+  or public.is_admin_master()
   or exists (
     select 1
     from public.user_city_halls uch
     where uch.city_hall_id = id
       and uch.user_id = auth.uid()
   )
+);
+
+drop policy if exists city_halls_public_active_select on public.city_halls;
+create policy city_halls_public_active_select on public.city_halls
+to anon
+for select using (
+  status = 'ATIVO'
 );
 
 drop policy if exists city_halls_admin_manage on public.city_halls;
@@ -327,6 +335,18 @@ for select using (
   public.can_access_city_hall(city_hall_id, array['CITY_HALL_ADMIN', 'SECRETARY', 'TECHNICAL']::public.user_role[])
 );
 
+drop policy if exists poles_select_public_active_city_hall on public.lighting_points;
+create policy poles_select_public_active_city_hall on public.lighting_points
+to anon
+for select using (
+  exists (
+    select 1
+    from public.city_halls ch
+    where ch.id = lighting_points.city_hall_id
+      and ch.status = 'ATIVO'
+  )
+);
+
 drop policy if exists poles_insert_manage on public.lighting_points;
 create policy poles_insert_manage on public.lighting_points
 for insert with check (
@@ -356,7 +376,23 @@ for select using (
 
 drop policy if exists complaints_insert_public on public.complaints;
 create policy complaints_insert_public on public.complaints
-for insert with check (status = 'PENDENTE');
+to anon
+for insert with check (
+  status = 'PENDENTE'
+  and lighting_point_code is not null
+  and exists (
+    select 1
+    from public.city_halls ch
+    where ch.id = complaints.city_hall_id
+      and ch.status = 'ATIVO'
+  )
+  and exists (
+    select 1
+    from public.lighting_points lp
+    where lp.code = complaints.lighting_point_code
+      and lp.city_hall_id = complaints.city_hall_id
+  )
+);
 
 drop policy if exists complaints_update_internal on public.complaints;
 create policy complaints_update_internal on public.complaints
@@ -419,6 +455,10 @@ for insert with check (
 -- Seed
 insert into public.city_halls (id, name, city, state, cnpj, latitude, longitude, status)
 values ('11111111-1111-1111-1111-111111111111', 'Prefeitura de Exemplo', 'Cidade Exemplo', 'MG', '12.345.678/0001-99', -15.3983, -42.3097, 'ATIVO')
+on conflict (id) do nothing;
+
+insert into public.city_halls (id, name, city, state, cnpj, latitude, longitude, status)
+values ('22222222-2222-2222-2222-222222222222', 'Prefeitura de Exemplo Sul', 'Cidade Exemplo', 'MG', '98.765.432/0001-11', -15.4124, -42.2911, 'ATIVO')
 on conflict (id) do nothing;
 
 insert into public.lighting_points (code, city_hall_id, latitude, longitude, address, status)
