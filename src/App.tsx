@@ -155,6 +155,16 @@ function RoleProtectedRoute({ children, roles }: { children: ReactNode; roles: U
   return <>{children}</>;
 }
 
+function RoleProtectedRoute({ children, roles }: { children: ReactNode; roles: UserRole[] }) {
+  const { user } = useAuth();
+
+  if (!user || !roles.includes(user.role)) {
+    return <Navigate to={user?.role === 'CITIZEN' ? '/denuncia' : '/'} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>

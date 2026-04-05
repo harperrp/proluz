@@ -267,9 +267,13 @@ for select using (
 
 drop policy if exists city_halls_public_active_select on public.city_halls;
 create policy city_halls_public_active_select on public.city_halls
+ codex/finalize-public-report-and-access-separation-7ioqab
+to anon
+
  codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
 
+ main
  main
 for select using (
   status = 'ATIVO'
@@ -340,9 +344,14 @@ for select using (
 
 drop policy if exists poles_select_public_active_city_hall on public.lighting_points;
 create policy poles_select_public_active_city_hall on public.lighting_points
+
+ codex/finalize-public-report-and-access-separation-7ioqab
+to anon
+
  codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
 
+ main
  main
 for select using (
   exists (
@@ -382,9 +391,14 @@ for select using (
 
 drop policy if exists complaints_insert_public on public.complaints;
 create policy complaints_insert_public on public.complaints
+
+ codex/finalize-public-report-and-access-separation-7ioqab
+to anon
+
  codex/finalize-public-report-and-access-separation-v9qc6r
 to anon
 
+ main
  main
 for insert with check (
   status = 'PENDENTE'
