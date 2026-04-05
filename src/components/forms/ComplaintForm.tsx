@@ -24,7 +24,7 @@ const complaintSchema = z.object({
 
 type ComplaintFormData = z.infer<typeof complaintSchema>;
 
-interface CityHallRow { id: string; city: string; state: string; status: 'ATIVO' | 'INATIVO' }
+interface CityHallRow { id: string; name: string; city: string; state: string; status: 'ATIVO' | 'INATIVO' }
 interface PoleRow { code: string; latitude: number; longitude: number; status: Pole['status']; city_hall_id: string; address: string | null }
 
 const icon = (color: string) => new L.Icon({ iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`, shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41] });
@@ -40,14 +40,40 @@ export function ComplaintForm() {
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<ComplaintFormData>({ resolver: zodResolver(complaintSchema) });
 
   useEffect(() => { void (async () => {
-    const rows = await dbSelect<CityHallRow>('city_halls?select=id,city,state,status&status=eq.ATIVO&order=city.asc');
+    const rows = await dbSelect<CityHallRow>('city_halls?select=id,name,city,state,status&status=eq.ATIVO&order=city.asc,name.asc');
     setCityHalls(rows);
   })(); }, []);
 
-  useEffect(() => { if (!selectedCityHallId) return; void (async () => {
+  useEffect(() => {
+    if (!selectedCityHallId) {
+      setPoles([]);
+      return;
+    }
+    void (async () => {
     const rows = await dbSelect<PoleRow>(`lighting_points?select=code,latitude,longitude,status,city_hall_id,address&city_hall_id=eq.${selectedCityHallId}`);
     setPoles(rows.map((r) => ({ id: r.code, latitude: r.latitude, longitude: r.longitude, status: r.status, cityHallId: r.city_hall_id, address: r.address ?? undefined, createdAt: new Date(), updatedAt: new Date() })));
-  })(); }, [selectedCityHallId]);
+    })();
+  }, [selectedCityHallId]);
+
+  const cityOptions = useMemo(() => {
+    const duplicatedCityState = cityHalls.reduce<Record<string, number>>((acc, cityHall) => {
+      const key = `${cityHall.city}-${cityHall.state}`;
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return cityHalls
+      .map((cityHall) => {
+        const key = `${cityHall.city}-${cityHall.state}`;
+        const showCityHallName = (duplicatedCityState[key] ?? 0) > 1;
+        const baseLabel = `${cityHall.city} - ${cityHall.state}`;
+        return {
+          id: cityHall.id,
+          label: showCityHallName ? `${baseLabel} · ${cityHall.name}` : baseLabel,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+  }, [cityHalls]);
 
   const mapCenter = useMemo(() => {
     if (poles.length === 0) return { lat: -15.3989, lng: -42.3091 };
@@ -92,7 +118,15 @@ export function ComplaintForm() {
         <Label>Cidade *</Label>
         <Select value={selectedCityHallId} onValueChange={(value) => { setSelectedCityHallId(value); setSelectedPole(null); }}>
           <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
-          <SelectContent>{cityHalls.map((ch) => <SelectItem key={ch.id} value={ch.id}>{ch.city} - {ch.state}</SelectItem>)}</SelectContent>
+          <SelectContent>
+            {cityOptions.length > 0 ? cityOptions.map((cityOption) => (
+              <SelectItem key={cityOption.id} value={cityOption.id}>{cityOption.label}</SelectItem>
+            )) : (
+              <div className="px-2 py-3 text-sm text-muted-foreground">
+                Nenhuma prefeitura ativa disponível no momento.
+              </div>
+            )}
+          </SelectContent>
         </Select>
       </div>
 
@@ -100,7 +134,7 @@ export function ComplaintForm() {
         <div className="space-y-2">
           <Label>Poste *</Label>
           <div className="rounded-lg border overflow-hidden" style={{ height: 320 }}>
-            <MapContainer center={[mapCenter.lat, mapCenter.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
+            <MapContainer key={selectedCityHallId} center={[mapCenter.lat, mapCenter.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
               <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {poles.map((pole) => (
                 <Marker key={pole.id} position={[pole.latitude, pole.longitude]} icon={selectedPole?.id === pole.id ? icon('blue') : icon(pole.status === 'QUEIMADO' ? 'red' : 'green')} eventHandlers={{ click: () => setSelectedPole(pole) }}>
@@ -109,6 +143,9 @@ export function ComplaintForm() {
               ))}
             </MapContainer>
           </div>
+          {poles.length === 0 && (
+            <p className="text-xs text-muted-foreground">Não há postes cadastrados para a prefeitura selecionada.</p>
+          )}
           {selectedPole && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{selectedPole.id} {selectedPole.address}</p>}
           {selectedPole?.status === 'QUEIMADO' && <p className="text-warning text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Já está queimado.</p>}
         </div>
